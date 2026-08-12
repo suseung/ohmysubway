@@ -12,11 +12,14 @@ data class Arrival(
     val trainStatus: String,
     val receivedAt: String,
 ) {
-    /** trainLineName("성수행 - 구의방면")에서 다음 정차역("구의")을 추출한다. */
+    /**
+     * trainLineName에서 다음 정차역을 추출한다.
+     * 예: "성수행 - 구의방면" → "구의", "구로행 - 신도림방면 (급행)" → "신도림"
+     */
     val nextStationName: String
-        get() = trainLineName
-            .substringAfterLast("-")
-            .trim()
-            .removeSuffix("방면")
-            .trim()
+        get() {
+            val tail = trainLineName.substringAfterLast("-")
+            if ("방면" !in tail) return ""
+            return tail.substringBefore("방면").trim()
+        }
 }

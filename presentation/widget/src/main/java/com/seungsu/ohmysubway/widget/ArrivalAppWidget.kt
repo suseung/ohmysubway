@@ -30,6 +30,7 @@ import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.seungsu.ohmysubway.domain.util.stationDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,7 +83,11 @@ private fun HeaderRow(data: ArrivalWidgetData) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if (data.configured) "${data.startStation} → ${data.destinationStation}" else "지하철 도착정보",
+            text = if (data.configured) {
+                "${data.startStation.stationDisplayName} → ${data.destinationStation.stationDisplayName}"
+            } else {
+                "지하철 도착정보"
+            },
             style = TextStyle(
                 color = GlanceTheme.colors.onSurface,
                 fontSize = 15.sp,
@@ -122,7 +127,7 @@ private fun ArrivalRow(item: WidgetArrivalItem) {
         )
         Spacer(GlanceModifier.width(6.dp))
         Text(
-            text = "${item.terminalStation}행",
+            text = "${item.terminalStation.stationDisplayName}행",
             style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
             maxLines = 1,
         )

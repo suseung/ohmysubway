@@ -21,6 +21,7 @@ import com.seungsu.ohmysubway.design.compose.theme.Grey60
 import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
 import com.seungsu.ohmysubway.domain.model.Arrival
 import com.seungsu.ohmysubway.domain.model.DirectedArrival
+import com.seungsu.ohmysubway.domain.util.stationDisplayName
 
 @Composable
 fun HomeItemRow(
@@ -47,7 +48,7 @@ fun HomeItemRow(
                 style = OhMySubwayTheme.typos.bold.font16,
             )
             Text(
-                text = "${directedArrival.arrival.terminalStation}행 · ${directedArrival.arrival.trainStatus}",
+                text = "${directedArrival.arrival.terminalStation.stationDisplayName}행 · ${directedArrival.arrival.trainStatus}",
                 style = OhMySubwayTheme.typos.regular.font12,
                 color = Grey60,
             )

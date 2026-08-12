@@ -1,11 +1,14 @@
 package com.seungsu.ohmysubway.home.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -16,9 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.common.component.StationSearchField
 import com.seungsu.ohmysubway.design.compose.ThemePreview
-import com.seungsu.ohmysubway.design.compose.theme.Grey60
 import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
-import com.seungsu.ohmysubway.design.compose.theme.Red50
 import com.seungsu.ohmysubway.home.HomeIntent
 import com.seungsu.ohmysubway.home.HomeState
 
@@ -28,18 +29,26 @@ fun HomeContent(
     uiAction: (HomeIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = OhMySubwayTheme.colors
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(colors.background.defaultBase)
+            .systemBarsPadding()
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
-        Text(text = "오마이지하철", style = OhMySubwayTheme.typos.bold.font24)
+        Text(
+            text = "오마이지하철",
+            style = OhMySubwayTheme.typos.bold.font24,
+            color = colors.label.onBgPrimary,
+        )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "시작역과 도착역을 고르면 도착역 방면 열차의 실시간 도착정보를 보여드려요.",
             style = OhMySubwayTheme.typos.regular.font14,
-            color = Grey60,
+            color = colors.label.onBgSecondary,
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -75,13 +84,13 @@ fun HomeContent(
             state.errorMessage != null -> Text(
                 text = state.errorMessage.orEmpty(),
                 style = OhMySubwayTheme.typos.regular.font14,
-                color = Red50,
+                color = colors.system.red,
             )
 
             state.lookedUp && state.arrivals.isEmpty() -> Text(
                 text = "도착 예정 열차가 없어요.",
                 style = OhMySubwayTheme.typos.regular.font14,
-                color = Grey60,
+                color = colors.label.onBgSecondary,
             )
 
             else -> state.arrivals.forEach { arrival ->

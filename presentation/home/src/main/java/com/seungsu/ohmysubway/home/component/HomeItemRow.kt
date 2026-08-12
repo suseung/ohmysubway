@@ -15,9 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.design.compose.ThemePreview
-import com.seungsu.ohmysubway.design.compose.theme.Blue50
-import com.seungsu.ohmysubway.design.compose.theme.Grey05
-import com.seungsu.ohmysubway.design.compose.theme.Grey60
 import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
 import com.seungsu.ohmysubway.domain.model.Arrival
 import com.seungsu.ohmysubway.domain.model.DirectedArrival
@@ -28,29 +25,31 @@ fun HomeItemRow(
     directedArrival: DirectedArrival,
     modifier: Modifier = Modifier,
 ) {
+    val colors = OhMySubwayTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Grey05)
+            .background(colors.background.groupedBase)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = directedArrival.lineName,
             style = OhMySubwayTheme.typos.bold.font12,
-            color = Blue50,
+            color = colors.system.blue,
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = directedArrival.arrival.arrivalMessage,
                 style = OhMySubwayTheme.typos.bold.font16,
+                color = colors.label.onBgPrimary,
             )
             Text(
                 text = "${directedArrival.arrival.terminalStation.stationDisplayName}행 · ${directedArrival.arrival.trainStatus}",
                 style = OhMySubwayTheme.typos.regular.font12,
-                color = Grey60,
+                color = colors.label.onBgSecondary,
             )
         }
     }

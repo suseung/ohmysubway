@@ -11,6 +11,9 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** 위젯 상태 저장/새로고침 담당. Glance 콜백에서는 Hilt 주입이 안 되므로 EntryPoint로 접근한다. */
 object ArrivalWidgetUpdater {
@@ -23,23 +26,53 @@ object ArrivalWidgetUpdater {
 
     private const val MAX_WIDGET_ARRIVALS = 4
 
+    /**
+     * 같은 위젯 상태 파일에 동시에 접근하면 Glance가 DataStore 중복 오류를 던지므로
+     * (위젯을 빠르게 두 번 누르는 경우 등) 상태 읽기/쓰기를 이 뮤텍스로 직렬화한다.
+     */
+    private val stateMutex = Mutex()
+
+    /** 저장된 위젯 설정을 읽는다. */
+    suspend fun readData(context: Context, glanceId: GlanceId): ArrivalWidgetData =
+        stateMutex.withLock { readDataLocked(context, glanceId) }
+
     /** 위젯 설정을 저장하고 첫 조회까지 수행한다. */
-    suspend fun configure(context: Context, glanceId: GlanceId, startStation: String, destinationStation: String) {
-        writeData(
-            context, glanceId,
-            ArrivalWidgetData(startStation = startStation, destinationStation = destinationStation),
-        )
+    suspend fun configure(
+        context: Context,
+        glanceId: GlanceId,
+        startStation: String,
+        destinationStation: String,
+        appearance: WidgetAppearance = WidgetAppearance(),
+    ) {
+        stateMutex.withLock {
+            writeDataLocked(
+                context, glanceId,
+                ArrivalWidgetData(
+                    startStation = startStation,
+                    destinationStation = destinationStation,
+                    appearance = appearance,
+                ),
+            )
+        }
         refresh(context, glanceId)
     }
 
     /** 저장된 설정으로 도착정보를 다시 조회해 위젯을 갱신한다. */
     suspend fun refresh(context: Context, glanceId: GlanceId) {
-        val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
-        val current = ArrivalWidgetData.decode(prefs[ArrivalWidgetData.PREF_KEY])
-        val now = System.currentTimeMillis()
-        if (!current.configured || current.isRefreshing(now)) return
+        val current = stateMutex.withLock {
+            val stored = readDataLocked(context, glanceId)
+            val now = System.currentTimeMillis()
+            if (!stored.configured) {
+                // 설정이 없는(앱 재설치 등으로 상태를 잃은) 위젯도 안내 문구는 그려준다
+                ArrivalAppWidget().update(context, glanceId)
+                return
+            }
+            if (stored.isRefreshing(now)) return
 
-        writeData(context, glanceId, current.copy(loading = true, loadingStartedAtMillis = now))
+            stored.also {
+                writeDataLocked(context, glanceId, it.copy(loading = true, loadingStartedAtMillis = now))
+            }
+        }
 
         val useCase = EntryPointAccessors
             .fromApplication(context, WidgetEntryPoint::class.java)
@@ -79,13 +112,43 @@ object ArrivalWidgetUpdater {
             },
         )
 
-        writeData(context, glanceId, refreshed)
+        stateMutex.withLock { writeDataLocked(context, glanceId, refreshed) }
     }
 
-    private suspend fun writeData(context: Context, glanceId: GlanceId, data: ArrivalWidgetData) {
-        updateAppWidgetState(context, glanceId) { prefs ->
-            prefs[ArrivalWidgetData.PREF_KEY] = data.encode()
+    private suspend fun readDataLocked(context: Context, glanceId: GlanceId): ArrivalWidgetData =
+        retryOnConcurrentStateAccess {
+            val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
+            ArrivalWidgetData.decode(prefs[ArrivalWidgetData.PREF_KEY])
+        }
+
+    private suspend fun writeDataLocked(context: Context, glanceId: GlanceId, data: ArrivalWidgetData) {
+        retryOnConcurrentStateAccess {
+            updateAppWidgetState(context, glanceId) { prefs ->
+                prefs[ArrivalWidgetData.PREF_KEY] = data.encode()
+            }
         }
         ArrivalAppWidget().update(context, glanceId)
     }
+
+    /**
+     * Glance가 위젯을 그리는 동안에도 같은 상태 파일을 열기 때문에, 우리 쪽 접근과 겹치면
+     * DataStore가 "multiple DataStores active" 예외를 던진다. 짧게 기다렸다 다시 시도한다.
+     */
+    private suspend fun <T> retryOnConcurrentStateAccess(block: suspend () -> T): T {
+        var lastError: IllegalStateException? = null
+        repeat(STATE_ACCESS_ATTEMPTS) { attempt ->
+            try {
+                return block()
+            } catch (e: IllegalStateException) {
+                if (e.message?.contains(MULTIPLE_DATASTORE_MESSAGE) != true) throw e
+                lastError = e
+                delay(STATE_ACCESS_RETRY_DELAY_MILLIS * (attempt + 1))
+            }
+        }
+        throw lastError ?: IllegalStateException("위젯 상태 접근 실패")
+    }
+
+    private const val STATE_ACCESS_ATTEMPTS = 5
+    private const val STATE_ACCESS_RETRY_DELAY_MILLIS = 100L
+    private const val MULTIPLE_DATASTORE_MESSAGE = "multiple DataStores active"
 }

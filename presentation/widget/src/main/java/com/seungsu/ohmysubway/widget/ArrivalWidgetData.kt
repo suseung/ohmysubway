@@ -14,6 +14,7 @@ data class ArrivalWidgetData(
     val loadingStartedAtMillis: Long = 0L,
     val errorMessage: String? = null,
     val arrivals: List<WidgetArrivalItem> = emptyList(),
+    val appearance: WidgetAppearance = WidgetAppearance(),
 ) {
     val configured: Boolean
         get() = startStation.isNotBlank() && destinationStation.isNotBlank()
@@ -46,3 +47,18 @@ data class WidgetArrivalItem(
     val message: String,
     val terminalStation: String,
 )
+
+/**
+ * 위젯 외형. 배경색과 투명도만 사용자가 고른다.
+ * 글자색은 배경 밝기에 따라 자동으로 잘 보이는 쪽(검정/흰색)으로 정해지므로 별도 설정이 없다.
+ */
+@Serializable
+data class WidgetAppearance(
+    val backgroundArgb: Int = DEFAULT_BACKGROUND_ARGB,
+    val backgroundAlpha: Float = DEFAULT_BACKGROUND_ALPHA,
+) {
+    companion object {
+        const val DEFAULT_BACKGROUND_ARGB = 0xFF1A1A1A.toInt()
+        const val DEFAULT_BACKGROUND_ALPHA = 0.85f
+    }
+}

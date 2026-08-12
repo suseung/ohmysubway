@@ -5,8 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.state.getAppWidgetState
-import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.seungsu.ohmysubway.widget.ArrivalWidgetData
@@ -88,8 +86,7 @@ class ArrivalWidgetE2ETest {
             startStation = startStation,
             destinationStation = destinationStation,
         )
-        val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
-        return ArrivalWidgetData.decode(prefs[ArrivalWidgetData.PREF_KEY])
+        return ArrivalWidgetUpdater.readData(context, glanceId)
     }
 
     companion object {

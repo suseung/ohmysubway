@@ -5,6 +5,7 @@ import com.seungsu.ohmysubway.domain.model.StationSummary
 import com.seungsu.ohmysubway.domain.repository.SubwayLineRepository
 import com.seungsu.ohmysubway.domain.usecase.SearchStationsUseCase
 import com.seungsu.ohmysubway.domain.util.DirectionResolver
+import com.seungsu.ohmysubway.widget.MIN_ALPHA
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -18,6 +19,19 @@ class WidgetConfigViewModel @Inject constructor(
 
     override suspend fun processIntent(intent: WidgetConfigIntent) {
         when (intent) {
+            is WidgetConfigIntent.Load -> {
+                setState {
+                    copy(
+                        startQuery = intent.data.startStation,
+                        destQuery = intent.data.destinationStation,
+                        selectedStart = intent.data.startStation.ifBlank { null },
+                        selectedDest = intent.data.destinationStation.ifBlank { null },
+                        appearance = intent.data.appearance,
+                    )
+                }
+                validateConnection()
+            }
+
             is WidgetConfigIntent.UpdateStartQuery -> {
                 setState { copy(startQuery = intent.query, selectedStart = null, notConnected = false) }
                 val results = search(intent.query)
@@ -44,6 +58,14 @@ class WidgetConfigViewModel @Inject constructor(
                 validateConnection()
             }
 
+            is WidgetConfigIntent.UpdateBackground -> setState {
+                copy(appearance = appearance.copy(backgroundArgb = intent.argb))
+            }
+
+            is WidgetConfigIntent.UpdateBackgroundAlpha -> setState {
+                copy(appearance = appearance.copy(backgroundAlpha = intent.alpha.coerceIn(MIN_ALPHA, 1f)))
+            }
+
             WidgetConfigIntent.Save -> save()
         }
     }
@@ -67,6 +89,12 @@ class WidgetConfigViewModel @Inject constructor(
         val start = state.selectedStart ?: return
         val dest = state.selectedDest ?: return
         if (!state.canSave) return
-        setEffect { WidgetConfigEffect.Complete(startStation = start, destinationStation = dest) }
+        setEffect {
+            WidgetConfigEffect.Complete(
+                startStation = start,
+                destinationStation = dest,
+                appearance = state.appearance,
+            )
+        }
     }
 }

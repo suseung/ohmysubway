@@ -36,9 +36,10 @@ object ArrivalWidgetUpdater {
     suspend fun refresh(context: Context, glanceId: GlanceId) {
         val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
         val current = ArrivalWidgetData.decode(prefs[ArrivalWidgetData.PREF_KEY])
-        if (!current.configured || current.loading) return
+        val now = System.currentTimeMillis()
+        if (!current.configured || current.isRefreshing(now)) return
 
-        writeData(context, glanceId, current.copy(loading = true))
+        writeData(context, glanceId, current.copy(loading = true, loadingStartedAtMillis = now))
 
         val useCase = EntryPointAccessors
             .fromApplication(context, WidgetEntryPoint::class.java)

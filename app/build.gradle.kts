@@ -6,6 +6,9 @@ plugins {
 
 android {
     namespace = "com.seungsu.ohmysubway"
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
     packaging {
         resources.excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
     }
@@ -29,4 +32,10 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.timber)
+    implementation(libs.androidx.glance.appwidget)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.uiautomator)
 }

@@ -1,7 +1,11 @@
 package com.seungsu.ohmysubway.widget
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import androidx.glance.GlanceId
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -35,6 +39,50 @@ object ArrivalWidgetUpdater {
     /** 저장된 위젯 설정을 읽는다. */
     suspend fun readData(context: Context, glanceId: GlanceId): ArrivalWidgetData =
         stateMutex.withLock { readDataLocked(context, glanceId) }
+
+    /**
+     * 모든 위젯을 다시 그린다 (조회 없이 화면만).
+     * 카운트다운이 0에 가까워졌을 때 표시를 정리하기 위해 알람에서 호출된다.
+     */
+    suspend fun rerenderAll(context: Context) {
+        val glanceIds = GlanceAppWidgetManager(context).getGlanceIds(ArrivalAppWidget::class.java)
+        glanceIds.forEach { ArrivalAppWidget().update(context, it) }
+        scheduleNextRerender(context, glanceIds)
+    }
+
+    /**
+     * 카운트다운이 멈춰야 하는 가장 가까운 시점에 위젯을 다시 그리도록 예약한다.
+     * 멈추는 시점은 열차 도착 시각, 또는 조회 후 30초 중 먼저 오는 쪽이다.
+     * 부정확 알람(RTC)이라 기기가 깨어 있을 때만 처리되고 별도 권한도 필요 없다.
+     */
+    private suspend fun scheduleNextRerender(context: Context, glanceIds: List<GlanceId>) {
+        val now = System.currentTimeMillis()
+        val nextBoundary = glanceIds
+            .map { readDataLocked(context, it) }
+            .flatMap { data ->
+                data.arrivals.mapNotNull { arrival ->
+                    arrival.arrivalAtMillis?.let { minOf(it, data.countdownStopAtMillis) }
+                }
+            }
+            .map { it + STOP_GRACE_MILLIS }
+            .filter { it > now }
+            .minOrNull()
+
+        val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            RERENDER_REQUEST_CODE,
+            Intent(context, ArrivalWidgetRerenderReceiver::class.java)
+                .setAction(ArrivalWidgetRerenderReceiver.ACTION_RERENDER),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        if (nextBoundary == null) {
+            alarmManager.cancel(pendingIntent)
+            return
+        }
+        alarmManager.set(AlarmManager.RTC, nextBoundary, pendingIntent)
+    }
 
     /** 위젯 설정을 저장하고 첫 조회까지 수행한다. */
     suspend fun configure(
@@ -139,6 +187,7 @@ object ArrivalWidgetUpdater {
             }
         }
         ArrivalAppWidget().update(context, glanceId)
+        scheduleNextRerender(context, listOf(glanceId))
     }
 
     /**
@@ -159,6 +208,8 @@ object ArrivalWidgetUpdater {
         throw lastError ?: IllegalStateException("위젯 상태 접근 실패")
     }
 
+    private const val RERENDER_REQUEST_CODE = 1001
+    private const val STOP_GRACE_MILLIS = 1_000L
     private const val STATE_ACCESS_ATTEMPTS = 5
     private const val STATE_ACCESS_RETRY_DELAY_MILLIS = 100L
     private const val MULTIPLE_DATASTORE_MESSAGE = "multiple DataStores active"

@@ -38,7 +38,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.seungsu.ohmysubway.common.util.IMMINENT_SECONDS
+import com.seungsu.ohmysubway.common.util.formatMinutesSeconds
 import com.seungsu.ohmysubway.domain.util.stationDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -89,10 +89,16 @@ private fun WidgetContent(data: ArrivalWidgetData) {
             !data.configured -> InfoText("역을 설정해주세요", colors.secondaryText, compact)
             data.loading -> InfoText("불러오는 중…", colors.secondaryText, compact)
             data.errorMessage != null -> InfoText(data.errorMessage, colors.secondaryText, compact)
-            data.arrivals.isEmpty() -> InfoText("도착 예정 열차 없음 · 눌러 새로고침", colors.secondaryText, compact)
+            data.arrivals.isEmpty() -> InfoText("눌러서 새로고침", colors.secondaryText, compact)
             else -> data.arrivals.take(maxRows).forEachIndexed { index, item ->
                 if (index > 0) Spacer(GlanceModifier.height(2.dp))
-                ArrivalRow(item = item, colors = colors, compact = compact, showTerminal = showTerminal)
+                ArrivalRow(
+                    item = item,
+                    colors = colors,
+                    compact = compact,
+                    showTerminal = showTerminal,
+                    countdownStopAtMillis = data.countdownStopAtMillis,
+                )
             }
         }
     }
@@ -142,6 +148,7 @@ private fun ArrivalRow(
     colors: ResolvedWidgetColors,
     compact: Boolean,
     showTerminal: Boolean,
+    countdownStopAtMillis: Long,
 ) {
     val fontSize = if (compact) 13.sp else 14.sp
     Row(
@@ -162,6 +169,7 @@ private fun ArrivalRow(
             item = item,
             colors = colors,
             fontSize = fontSize,
+            countdownStopAtMillis = countdownStopAtMillis,
             modifier = GlanceModifier.defaultWeight(),
         )
         if (showTerminal) {
@@ -181,26 +189,39 @@ private fun ArrivalRow(
 /**
  * 초 단위 정보가 있으면 Chronometer로 스스로 줄어드는 카운트다운을,
  * 없으면(경의중앙·공항철도 등) 서버 문구를 그대로 보여준다.
+ *
+ * 카운트다운은 도착 시각 또는 조회 후 30초 중 먼저 오는 시점에 멈춘다.
+ * 멈춘 뒤에는 같은 분:초 형식의 고정 문구로 보여준다.
  */
 @Composable
 private fun CountdownOrMessage(
     item: WidgetArrivalItem,
     colors: ResolvedWidgetColors,
     fontSize: TextUnit,
+    countdownStopAtMillis: Long,
     modifier: GlanceModifier,
 ) {
     val context = LocalContext.current
     val arrivalAt = item.arrivalAtMillis
-    val remainingMillis = arrivalAt?.minus(System.currentTimeMillis()) ?: 0L
+    val textStyle = TextStyle(
+        color = androidx.glance.unit.ColorProvider(colors.primaryText),
+        fontSize = fontSize,
+        fontWeight = FontWeight.Medium,
+    )
 
-    if (arrivalAt == null || remainingMillis <= IMMINENT_SECONDS * 1000L) {
+    if (arrivalAt == null) {
+        Text(text = item.message, style = textStyle, maxLines = 1, modifier = modifier)
+        return
+    }
+
+    val now = System.currentTimeMillis()
+    val stopAt = minOf(arrivalAt, countdownStopAtMillis)
+
+    if (now >= stopAt) {
+        val frozenSeconds = (arrivalAt - stopAt) / MILLIS_PER_SECOND
         Text(
-            text = if (arrivalAt == null) item.message else "곧 도착",
-            style = TextStyle(
-                color = androidx.glance.unit.ColorProvider(colors.primaryText),
-                fontSize = fontSize,
-                fontWeight = FontWeight.Medium,
-            ),
+            text = if (frozenSeconds <= 0) "00:00" else "${formatMinutesSeconds(frozenSeconds)} 후",
+            style = textStyle,
             maxLines = 1,
             modifier = modifier,
         )
@@ -210,7 +231,7 @@ private fun CountdownOrMessage(
     val remoteViews = RemoteViews(context.packageName, R.layout.widget_countdown).apply {
         setChronometer(
             R.id.widget_countdown,
-            SystemClock.elapsedRealtime() + remainingMillis,
+            SystemClock.elapsedRealtime() + (arrivalAt - now),
             "%s 후",
             true,
         )
@@ -236,6 +257,7 @@ private fun InfoText(message: String, color: androidx.compose.ui.graphics.Color,
 private fun formatTime(millis: Long): String =
     SimpleDateFormat("HH:mm", Locale.KOREA).format(Date(millis))
 
+private const val MILLIS_PER_SECOND = 1000L
 private const val MAX_WIDGET_ROWS = 4
 private const val HEADER_HEIGHT_DP = 30f
 private const val ROW_HEIGHT_DP = 20f

@@ -33,11 +33,19 @@ data class ArrivalWidgetData(
     fun isFresh(nowMillis: Long): Boolean =
         updatedAtMillis > 0 && nowMillis - updatedAtMillis < DATA_REFRESH_INTERVAL_MILLIS
 
+    /**
+     * 카운트다운을 멈출 시각. 조회 후 30초까지만 흐르게 한다 —
+     * 그 뒤로는 API 데이터 자체가 낡아서 초 단위로 계속 세는 게 근거가 없다.
+     */
+    val countdownStopAtMillis: Long
+        get() = updatedAtMillis + COUNTDOWN_WINDOW_MILLIS
+
     fun encode(): String = json.encodeToString(serializer(), this)
 
     companion object {
         const val LOADING_TIMEOUT_MILLIS = 20_000L
         const val DATA_REFRESH_INTERVAL_MILLIS = 30_000L
+        const val COUNTDOWN_WINDOW_MILLIS = 30_000L
 
         val PREF_KEY = stringPreferencesKey("arrival_widget_data")
 

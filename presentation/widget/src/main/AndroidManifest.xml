@@ -14,6 +14,15 @@
                 android:resource="@xml/arrival_widget_info" />
         </receiver>
 
+        <!-- 카운트다운이 0에 가까워지면 위젯 표시만 정리하는 리시버 (네트워크 호출 없음) -->
+        <receiver
+            android:name="com.seungsu.ohmysubway.widget.ArrivalWidgetRerenderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.seungsu.ohmysubway.widget.action.RERENDER" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name="com.seungsu.ohmysubway.widget.config.ArrivalWidgetConfigActivity"
             android:exported="true">

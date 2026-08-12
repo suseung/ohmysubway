@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.seungsu.ohmysubway.common.util.formatRemaining
 import com.seungsu.ohmysubway.design.compose.ThemePreview
 import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
 import com.seungsu.ohmysubway.domain.model.Arrival
@@ -41,8 +43,12 @@ fun HomeItemRow(
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
+            // 초 단위 정보가 있으면 데이터 지연을 보정한 시간, 없으면 서버 문구
+            val remaining = remember(directedArrival) {
+                directedArrival.arrival.remainingSeconds(System.currentTimeMillis())
+            }
             Text(
-                text = directedArrival.arrival.arrivalMessage,
+                text = remaining?.let(::formatRemaining) ?: directedArrival.arrival.arrivalMessage,
                 style = OhMySubwayTheme.typos.bold.font16,
                 color = colors.label.onBgPrimary,
             )
@@ -73,6 +79,7 @@ private fun HomeItemRowPreview() {
                     arrivalCode = "99",
                     trainStatus = "일반",
                     receivedAt = "2026-08-12 10:00:00",
+                    receivedAtMillis = System.currentTimeMillis(),
                 ),
             ),
         )

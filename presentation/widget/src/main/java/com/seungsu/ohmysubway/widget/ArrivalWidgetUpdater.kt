@@ -68,6 +68,11 @@ object ArrivalWidgetUpdater {
                 return
             }
             if (stored.isRefreshing(now)) return
+            if (stored.isFresh(now)) {
+                // 30초 안에 다시 눌렀으면 같은 데이터라 호출을 생략하고 화면만 다시 그린다
+                ArrivalAppWidget().update(context, glanceId)
+                return
+            }
 
             stored.also {
                 writeDataLocked(context, glanceId, it.copy(loading = true, loadingStartedAtMillis = now))
@@ -93,18 +98,24 @@ object ArrivalWidgetUpdater {
                         errorMessage = "두 역이 같은 노선으로 연결되어 있지 않아요",
                     )
 
-                    is DirectedArrivals.Success -> current.copy(
-                        loading = false,
-                        errorMessage = null,
-                        updatedAtMillis = System.currentTimeMillis(),
-                        arrivals = result.arrivals.take(MAX_WIDGET_ARRIVALS).map {
-                            WidgetArrivalItem(
-                                lineName = it.lineName,
-                                message = it.arrival.arrivalMessage,
-                                terminalStation = it.arrival.terminalStation,
-                            )
-                        },
-                    )
+                    is DirectedArrivals.Success -> {
+                        val fetchedAt = System.currentTimeMillis()
+                        current.copy(
+                            loading = false,
+                            errorMessage = null,
+                            updatedAtMillis = fetchedAt,
+                            arrivals = result.arrivals.take(MAX_WIDGET_ARRIVALS).map { directed ->
+                                // 데이터 지연을 보정한 남은 시간으로 도착 예정 시각을 만든다
+                                val remaining = directed.arrival.remainingSeconds(fetchedAt)
+                                WidgetArrivalItem(
+                                    lineName = directed.lineName,
+                                    message = directed.arrival.arrivalMessage,
+                                    terminalStation = directed.arrival.terminalStation,
+                                    arrivalAtMillis = remaining?.let { fetchedAt + it * 1000L },
+                                )
+                            },
+                        )
+                    }
                 }
             },
             onFailure = {

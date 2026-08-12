@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  위젯 안에서 초를 세는 카운트다운.
+  Chronometer는 런처 프로세스가 직접 갱신하므로, 우리 앱이 1초마다 위젯을 다시 그릴 필요가 없다.
+-->
+<Chronometer xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_countdown"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:maxLines="1"
+    android:ellipsize="end"
+    android:includeFontPadding="false"
+    android:textSize="14sp"
+    android:textStyle="bold" />

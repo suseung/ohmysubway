@@ -26,10 +26,18 @@ data class ArrivalWidgetData(
     fun isRefreshing(nowMillis: Long): Boolean =
         loading && nowMillis - loadingStartedAtMillis < LOADING_TIMEOUT_MILLIS
 
+    /**
+     * API는 30초 주기로만 갱신되므로 그 안에 다시 조회해도 같은 데이터가 온다.
+     * 불필요한 호출(일 1,000회 제한)을 아끼기 위해 최근 데이터는 그대로 쓴다.
+     */
+    fun isFresh(nowMillis: Long): Boolean =
+        updatedAtMillis > 0 && nowMillis - updatedAtMillis < DATA_REFRESH_INTERVAL_MILLIS
+
     fun encode(): String = json.encodeToString(serializer(), this)
 
     companion object {
         const val LOADING_TIMEOUT_MILLIS = 20_000L
+        const val DATA_REFRESH_INTERVAL_MILLIS = 30_000L
 
         val PREF_KEY = stringPreferencesKey("arrival_widget_data")
 
@@ -44,8 +52,11 @@ data class ArrivalWidgetData(
 @Serializable
 data class WidgetArrivalItem(
     val lineName: String,
+    /** 초 단위 정보가 없는 노선에서 쓰는 서버 문구 (예: "[3]번째 전역") */
     val message: String,
     val terminalStation: String,
+    /** 초 단위 정보가 있으면 도착 예정 시각. 위젯이 여기서부터 카운트다운한다. */
+    val arrivalAtMillis: Long? = null,
 )
 
 /**

@@ -1,15 +1,22 @@
 package com.seungsu.ohmysubway.widget
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.TypedValue
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
@@ -31,6 +38,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.seungsu.ohmysubway.common.util.IMMINENT_SECONDS
 import com.seungsu.ohmysubway.domain.util.stationDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -150,14 +158,10 @@ private fun ArrivalRow(
             maxLines = 1,
         )
         Spacer(GlanceModifier.width(5.dp))
-        Text(
-            text = item.message,
-            style = TextStyle(
-                color = androidx.glance.unit.ColorProvider(colors.primaryText),
-                fontSize = fontSize,
-                fontWeight = FontWeight.Medium,
-            ),
-            maxLines = 1,
+        CountdownOrMessage(
+            item = item,
+            colors = colors,
+            fontSize = fontSize,
             modifier = GlanceModifier.defaultWeight(),
         )
         if (showTerminal) {
@@ -172,6 +176,49 @@ private fun ArrivalRow(
             )
         }
     }
+}
+
+/**
+ * 초 단위 정보가 있으면 Chronometer로 스스로 줄어드는 카운트다운을,
+ * 없으면(경의중앙·공항철도 등) 서버 문구를 그대로 보여준다.
+ */
+@Composable
+private fun CountdownOrMessage(
+    item: WidgetArrivalItem,
+    colors: ResolvedWidgetColors,
+    fontSize: TextUnit,
+    modifier: GlanceModifier,
+) {
+    val context = LocalContext.current
+    val arrivalAt = item.arrivalAtMillis
+    val remainingMillis = arrivalAt?.minus(System.currentTimeMillis()) ?: 0L
+
+    if (arrivalAt == null || remainingMillis <= IMMINENT_SECONDS * 1000L) {
+        Text(
+            text = if (arrivalAt == null) item.message else "곧 도착",
+            style = TextStyle(
+                color = androidx.glance.unit.ColorProvider(colors.primaryText),
+                fontSize = fontSize,
+                fontWeight = FontWeight.Medium,
+            ),
+            maxLines = 1,
+            modifier = modifier,
+        )
+        return
+    }
+
+    val remoteViews = RemoteViews(context.packageName, R.layout.widget_countdown).apply {
+        setChronometer(
+            R.id.widget_countdown,
+            SystemClock.elapsedRealtime() + remainingMillis,
+            "%s 후",
+            true,
+        )
+        setChronometerCountDown(R.id.widget_countdown, true)
+        setTextColor(R.id.widget_countdown, colors.primaryText.toArgb())
+        setTextViewTextSize(R.id.widget_countdown, TypedValue.COMPLEX_UNIT_SP, fontSize.value)
+    }
+    AndroidRemoteViews(remoteViews = remoteViews, modifier = modifier)
 }
 
 @Composable

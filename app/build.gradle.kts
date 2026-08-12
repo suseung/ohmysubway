@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":design:compose"))
     implementation(project(":presentation:home"))
+    implementation(project(":presentation:widget"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

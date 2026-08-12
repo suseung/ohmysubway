@@ -4,6 +4,7 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.seungsu.ohmysubway.data.BuildConfig
+import com.seungsu.ohmysubway.data.service.SubwayApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,8 +62,12 @@ object NetworkModule {
 
     @Provides @Singleton
     fun provideRetrofit(client: OkHttpClient, json: Json): Retrofit = Retrofit.Builder()
-        .baseUrl("https://api.example.com/") // TODO: 실제 baseUrl로 변경
+        .baseUrl("http://swopenapi.seoul.go.kr/")
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json; charset=UTF8".toMediaType()))
         .build()
+
+    @Provides @Singleton
+    fun provideSubwayApiService(retrofit: Retrofit): SubwayApiService =
+        retrofit.create(SubwayApiService::class.java)
 }

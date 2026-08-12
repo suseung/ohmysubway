@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">지하철 도착정보</string>
+    <string name="widget_description">시작역에서 도착역 방면 열차의 실시간 도착정보를 보여줍니다. 위젯을 누르면 새로고침됩니다.</string>
+</resources>

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.ohmysubway.android.library)
     alias(libs.plugins.hilt)
@@ -5,10 +7,23 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.seungsu.ohmysubway.data"
     buildFeatures {
         buildConfig = true
+    }
+    defaultConfig {
+        // 서울 열린데이터광장 실시간 지하철 인증키 — local.properties의 SEOUL_SUBWAY_API_KEY
+        buildConfigField(
+            "String",
+            "SEOUL_SUBWAY_API_KEY",
+            "\"${localProperties.getProperty("SEOUL_SUBWAY_API_KEY") ?: "sample"}\"",
+        )
     }
 }
 

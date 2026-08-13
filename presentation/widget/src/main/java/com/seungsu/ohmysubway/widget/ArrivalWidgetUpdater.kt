@@ -51,17 +51,19 @@ object ArrivalWidgetUpdater {
     }
 
     /**
-     * 가장 이른 도착 시각에 위젯을 다시 그리도록 예약한다 — 지나간 열차의 남은 시간을 0으로
-     * 내리기 위한 보조 수단이다.
-     *
-     * 부정확 알람(RTC)이라 안드로이드가 수 분 미룰 수 있지만, 표시값은 그릴 때마다 다시
-     * 계산하므로 늦게 오면 숫자가 더 줄어들 뿐이고 틀린 값이 보이지는 않는다.
+     * 카운트다운이 멈춰야 하는 가장 가까운 시점에 위젯을 다시 그리도록 예약한다.
+     * 멈추는 시점은 열차 도착 시각, 또는 조회 후 30초 중 먼저 오는 쪽이다.
+     * 부정확 알람(RTC)이라 기기가 깨어 있을 때만 처리되고 별도 권한도 필요 없다.
      */
     private suspend fun scheduleNextRerender(context: Context, glanceIds: List<GlanceId>) {
         val now = System.currentTimeMillis()
         val nextBoundary = glanceIds
             .map { readDataLocked(context, it) }
-            .flatMap { data -> data.arrivals.mapNotNull { it.arrivalAtMillis } }
+            .flatMap { data ->
+                data.arrivals.mapNotNull { arrival ->
+                    arrival.arrivalAtMillis?.let { minOf(it, data.countdownStopAtMillis) }
+                }
+            }
             .map { it + STOP_GRACE_MILLIS }
             .filter { it > now }
             .minOrNull()

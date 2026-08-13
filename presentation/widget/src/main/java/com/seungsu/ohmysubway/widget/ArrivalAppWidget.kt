@@ -1,8 +1,12 @@
 package com.seungsu.ohmysubway.widget
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.TypedValue
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -12,6 +16,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
@@ -33,7 +38,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.seungsu.ohmysubway.common.util.formatRemaining
+import com.seungsu.ohmysubway.common.util.formatMinutesSeconds
 import com.seungsu.ohmysubway.domain.util.stationDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -92,6 +97,7 @@ private fun WidgetContent(data: ArrivalWidgetData) {
                     colors = colors,
                     compact = compact,
                     showTerminal = showTerminal,
+                    countdownStopAtMillis = data.countdownStopAtMillis,
                 )
             }
         }
@@ -142,6 +148,7 @@ private fun ArrivalRow(
     colors: ResolvedWidgetColors,
     compact: Boolean,
     showTerminal: Boolean,
+    countdownStopAtMillis: Long,
 ) {
     val fontSize = if (compact) 13.sp else 14.sp
     Row(
@@ -158,10 +165,11 @@ private fun ArrivalRow(
             maxLines = 1,
         )
         Spacer(GlanceModifier.width(5.dp))
-        RemainingText(
+        CountdownOrMessage(
             item = item,
             colors = colors,
             fontSize = fontSize,
+            countdownStopAtMillis = countdownStopAtMillis,
             modifier = GlanceModifier.defaultWeight(),
         )
         if (showTerminal) {
@@ -179,39 +187,59 @@ private fun ArrivalRow(
 }
 
 /**
- * 남은 시간을 그리는 시점에 계산해 고정 문구로 보여준다.
+ * 초 단위 정보가 있으면 Chronometer로 스스로 줄어드는 카운트다운을,
+ * 없으면(경의중앙·공항철도 등) 서버 문구를 그대로 보여준다.
  *
- * 예전엔 Chronometer로 초를 계속 셌지만, 스스로 멈출 수 없어서 0을 지나면 음수가 됐다.
- * 멈추려면 정해진 시각에 다시 그려야 하는데, 위젯이 쓸 수 있는 알람은 안드로이드가
- * 수 분씩 미룰 수 있어 제때 멈추는 걸 보장할 수 없다.
- * 그래서 그릴 때마다 계산해 0 이하는 0으로 막는다 — 숫자가 거꾸로 올라가는 일도 없다.
+ * 카운트다운은 도착 시각 또는 조회 후 30초 중 먼저 오는 시점에 멈춘다.
+ * 멈춘 뒤에는 같은 분:초 형식의 고정 문구로 보여준다.
  */
 @Composable
-private fun RemainingText(
+private fun CountdownOrMessage(
     item: WidgetArrivalItem,
     colors: ResolvedWidgetColors,
     fontSize: TextUnit,
+    countdownStopAtMillis: Long,
     modifier: GlanceModifier,
 ) {
+    val context = LocalContext.current
     val arrivalAt = item.arrivalAtMillis
-    val text = if (arrivalAt == null) {
-        item.message
-    } else {
-        val remaining = ((arrivalAt - System.currentTimeMillis()) / MILLIS_PER_SECOND)
-            .coerceAtLeast(0)
-        formatRemaining(remaining.toInt())
+    val textStyle = TextStyle(
+        color = androidx.glance.unit.ColorProvider(colors.primaryText),
+        fontSize = fontSize,
+        fontWeight = FontWeight.Medium,
+    )
+
+    if (arrivalAt == null) {
+        Text(text = item.message, style = textStyle, maxLines = 1, modifier = modifier)
+        return
     }
 
-    Text(
-        text = text,
-        style = TextStyle(
-            color = androidx.glance.unit.ColorProvider(colors.primaryText),
-            fontSize = fontSize,
-            fontWeight = FontWeight.Medium,
-        ),
-        maxLines = 1,
-        modifier = modifier,
-    )
+    val now = System.currentTimeMillis()
+    val stopAt = minOf(arrivalAt, countdownStopAtMillis)
+
+    if (now >= stopAt) {
+        val frozenSeconds = (arrivalAt - stopAt) / MILLIS_PER_SECOND
+        Text(
+            text = if (frozenSeconds <= 0) "00:00" else "${formatMinutesSeconds(frozenSeconds)} 후",
+            style = textStyle,
+            maxLines = 1,
+            modifier = modifier,
+        )
+        return
+    }
+
+    val remoteViews = RemoteViews(context.packageName, R.layout.widget_countdown).apply {
+        setChronometer(
+            R.id.widget_countdown,
+            SystemClock.elapsedRealtime() + (arrivalAt - now),
+            "%s 후",
+            true,
+        )
+        setChronometerCountDown(R.id.widget_countdown, true)
+        setTextColor(R.id.widget_countdown, colors.primaryText.toArgb())
+        setTextViewTextSize(R.id.widget_countdown, TypedValue.COMPLEX_UNIT_SP, fontSize.value)
+    }
+    AndroidRemoteViews(remoteViews = remoteViews, modifier = modifier)
 }
 
 @Composable

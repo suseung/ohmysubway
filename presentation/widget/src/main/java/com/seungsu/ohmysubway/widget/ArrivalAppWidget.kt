@@ -38,7 +38,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.seungsu.ohmysubway.common.util.formatMinutesSeconds
+import com.seungsu.ohmysubway.common.util.formatRemaining
 import com.seungsu.ohmysubway.domain.util.stationDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -97,7 +97,6 @@ private fun WidgetContent(data: ArrivalWidgetData) {
                     colors = colors,
                     compact = compact,
                     showTerminal = showTerminal,
-                    countdownStopAtMillis = data.countdownStopAtMillis,
                 )
             }
         }
@@ -148,7 +147,6 @@ private fun ArrivalRow(
     colors: ResolvedWidgetColors,
     compact: Boolean,
     showTerminal: Boolean,
-    countdownStopAtMillis: Long,
 ) {
     val fontSize = if (compact) 13.sp else 14.sp
     Row(
@@ -169,7 +167,6 @@ private fun ArrivalRow(
             item = item,
             colors = colors,
             fontSize = fontSize,
-            countdownStopAtMillis = countdownStopAtMillis,
             modifier = GlanceModifier.defaultWeight(),
         )
         if (showTerminal) {
@@ -190,15 +187,14 @@ private fun ArrivalRow(
  * 초 단위 정보가 있으면 Chronometer로 스스로 줄어드는 카운트다운을,
  * 없으면(경의중앙·공항철도 등) 서버 문구를 그대로 보여준다.
  *
- * 카운트다운은 도착 시각 또는 조회 후 30초 중 먼저 오는 시점에 멈춘다.
- * 멈춘 뒤에는 같은 분:초 형식의 고정 문구로 보여준다.
+ * 카운트다운은 도착 시각까지 흐른다. 도착 시각을 지난 열차는 "0초"로 보여준다 —
+ * Chronometer는 값으로 멈추지 못해 그냥 두면 음수로 흐르기 때문이다.
  */
 @Composable
 private fun CountdownOrMessage(
     item: WidgetArrivalItem,
     colors: ResolvedWidgetColors,
     fontSize: TextUnit,
-    countdownStopAtMillis: Long,
     modifier: GlanceModifier,
 ) {
     val context = LocalContext.current
@@ -215,16 +211,8 @@ private fun CountdownOrMessage(
     }
 
     val now = System.currentTimeMillis()
-    val stopAt = minOf(arrivalAt, countdownStopAtMillis)
-
-    if (now >= stopAt) {
-        val frozenSeconds = (arrivalAt - stopAt) / MILLIS_PER_SECOND
-        Text(
-            text = if (frozenSeconds <= 0) "00:00" else "${formatMinutesSeconds(frozenSeconds)} 후",
-            style = textStyle,
-            maxLines = 1,
-            modifier = modifier,
-        )
+    if (now >= arrivalAt) {
+        Text(text = formatRemaining(0), style = textStyle, maxLines = 1, modifier = modifier)
         return
     }
 
@@ -257,7 +245,6 @@ private fun InfoText(message: String, color: androidx.compose.ui.graphics.Color,
 private fun formatTime(millis: Long): String =
     SimpleDateFormat("HH:mm", Locale.KOREA).format(Date(millis))
 
-private const val MILLIS_PER_SECOND = 1000L
 private const val MAX_WIDGET_ROWS = 4
 private const val HEADER_HEIGHT_DP = 30f
 private const val ROW_HEIGHT_DP = 20f

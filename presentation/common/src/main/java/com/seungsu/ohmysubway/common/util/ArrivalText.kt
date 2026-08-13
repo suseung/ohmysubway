@@ -11,10 +11,4 @@ fun formatRemaining(seconds: Int): String = when {
     }
 }
 
-/** 위젯 카운트다운(Chronometer)과 같은 분:초 형식. 멈춘 값도 같은 모양으로 보이게 쓴다. */
-fun formatMinutesSeconds(seconds: Long): String {
-    val safe = seconds.coerceAtLeast(0)
-    return "%02d:%02d".format(safe / SECONDS_PER_MINUTE, safe % SECONDS_PER_MINUTE)
-}
-
 private const val SECONDS_PER_MINUTE = 60

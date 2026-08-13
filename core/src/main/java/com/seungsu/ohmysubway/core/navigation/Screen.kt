@@ -6,4 +6,7 @@ sealed interface Screen {
 
     @Serializable
     data object Home : Screen
+
+    @Serializable
+    data object Guide : Screen
 }

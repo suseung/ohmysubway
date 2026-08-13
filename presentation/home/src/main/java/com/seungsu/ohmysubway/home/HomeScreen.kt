@@ -10,6 +10,7 @@ import com.seungsu.ohmysubway.home.component.HomeContent
 
 @Composable
 fun HomeScreen(
+    onGuideClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -20,5 +21,5 @@ fun HomeScreen(
         processEffect = { },
     )
 
-    HomeContent(state = state, uiAction = uiAction)
+    HomeContent(state = state, uiAction = uiAction, onGuideClick = onGuideClick)
 }

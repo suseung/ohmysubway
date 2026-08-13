@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      창 배경색. Compose가 화면을 그리기 전(앱 시작, 화면 전환)에 잠깐 보이는 색이라
+      테마 배경과 같게 맞춰야 깜빡임이 없다. values-night에 어두운 값을 둔다.
+    -->
+    <color name="window_background">#FFFFFFFF</color>
+</resources>

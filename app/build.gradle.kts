@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":design:compose"))
     implementation(project(":presentation:home"))
     implementation(project(":presentation:widget"))
+    implementation(project(":presentation:guide"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

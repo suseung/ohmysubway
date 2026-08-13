@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 다크 모드 창 배경 — OhMySubwayTheme의 다크 배경색(Grey90)과 동일하게 맞춘다. -->
+    <color name="window_background">#FF1A1A1A</color>
+</resources>

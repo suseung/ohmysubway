@@ -2,6 +2,7 @@ package com.seungsu.ohmysubway.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +15,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.common.component.StationSearchField
@@ -27,6 +30,7 @@ import com.seungsu.ohmysubway.home.HomeState
 fun HomeContent(
     state: HomeState,
     uiAction: (HomeIntent) -> Unit,
+    onGuideClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = OhMySubwayTheme.colors
@@ -39,11 +43,20 @@ fun HomeContent(
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
-        Text(
-            text = "오마이지하철",
-            style = OhMySubwayTheme.typos.bold.font24,
-            color = colors.label.onBgPrimary,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "오마이지하철",
+                style = OhMySubwayTheme.typos.bold.font24,
+                color = colors.label.onBgPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onGuideClick) {
+                Text(text = "정확도 안내", style = OhMySubwayTheme.typos.regular.font12)
+            }
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "시작역과 도착역을 고르면 도착역 방면 열차의 실시간 도착정보를 보여드려요.",

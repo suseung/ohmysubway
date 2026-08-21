@@ -64,7 +64,7 @@ Glance로 만든 위젯. 배터리를 아끼려고 **자동 갱신은 하지 않
 - **Retrofit** 3.0.0 + **OkHttp** 5.2.1 + kotlinx.serialization — 네트워크
 - **DataStore** — 위젯 상태 저장 (Glance `PreferencesGlanceStateDefinition`)
 - **MVI** — `MVIViewModel<Intent, State, Effect>` 기반 단방향 상태 관리
-- minSdk 26 · targetSdk 35 · AGP 8.7.2
+- minSdk 26 · targetSdk 36 · AGP 8.12.3
 
 ## 모듈 구조
 

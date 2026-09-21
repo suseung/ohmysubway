@@ -57,21 +57,12 @@ private val TEXT_ON_DARK = Color(0xFFFFFFFF)
 private val ACCENT_ON_DARK = Color(0xFF7FB8FF)
 
 /**
- * 설정 화면에서 고를 수 있는 배경색 프리셋.
+ * 설정 화면에서 고를 수 있는 배경색 프리셋 — 서울 지하철 1~9호선 공식 노선색.
  *
- * 앞쪽은 어떤 노선에나 무난한 기본 톤, 뒤쪽은 서울 지하철 1~9호선 공식 노선색이다.
- * 노선색은 원색 그대로 둔다 — 어둡게 낮추면 색조가 붙어 있는 3·6·9호선이 서로 구분되지 않는다.
+ * 노선색은 원색 그대로 둔다. 어둡게 낮추면 색조가 붙어 있는 3·6·9호선이 서로 구분되지 않는다.
  * 대신 글자색이 배경에 맞춰 자동으로 정해져서 읽히는 데 문제가 없다(resolveColors 참고).
  */
 val WIDGET_BACKGROUND_PRESETS: List<Pair<String, Int>> = listOf(
-    "검정" to 0xFF1A1A1A.toInt(),
-    "남색" to 0xFF12294A.toInt(),
-    "지하철 초록" to 0xFF12503A.toInt(),
-    "자주" to 0xFF3A1436.toInt(),
-    // 6호선 갈색(#CD7C2F)을 기본 톤 깊이로 낮춘 값. 색조는 그대로 두었다.
-    "갈색" to 0xFF6B4018.toInt(),
-    "흰색" to 0xFFFFFFFF.toInt(),
-    "연회색" to 0xFFE8EAED.toInt(),
     "1호선" to 0xFF0052A4.toInt(),
     "2호선" to 0xFF00A84D.toInt(),
     "3호선" to 0xFFEF7C1C.toInt(),

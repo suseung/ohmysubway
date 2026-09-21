@@ -90,7 +90,8 @@ data class WidgetAppearance(
     val backgroundAlpha: Float = DEFAULT_BACKGROUND_ALPHA,
 ) {
     companion object {
-        const val DEFAULT_BACKGROUND_ARGB = 0xFF1A1A1A.toInt()
+        /** 프리셋 첫 번째(1호선)와 같게 둔다 — 기본값이 목록에 없으면 선택 표시가 안 된다. */
+        const val DEFAULT_BACKGROUND_ARGB = 0xFF0052A4.toInt()
         const val DEFAULT_BACKGROUND_ALPHA = 0.85f
     }
 }

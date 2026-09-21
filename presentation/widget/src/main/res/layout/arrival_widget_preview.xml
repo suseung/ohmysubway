@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:text="18:24"
-            android:textColor="#C7CDD4"
+            android:textColor="#C7FFFFFF"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:text="2호선"
-            android:textColor="#7FB8FF"
+            android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -72,7 +72,7 @@
             android:layout_marginStart="5dp"
             android:includeFontPadding="false"
             android:text="성수행"
-            android:textColor="#C7CDD4"
+            android:textColor="#C7FFFFFF"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -88,7 +88,7 @@
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
             android:text="2호선"
-            android:textColor="#7FB8FF"
+            android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -109,7 +109,7 @@
             android:layout_marginStart="5dp"
             android:includeFontPadding="false"
             android:text="성수행"
-            android:textColor="#C7CDD4"
+            android:textColor="#C7FFFFFF"
             android:textSize="10sp" />
     </LinearLayout>
 </LinearLayout>

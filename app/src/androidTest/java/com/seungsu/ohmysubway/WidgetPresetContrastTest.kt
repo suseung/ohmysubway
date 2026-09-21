@@ -51,6 +51,19 @@ class WidgetPresetContrastTest {
         )
     }
 
+    /**
+     * 기본값이 목록에 없으면 위젯을 새로 추가했을 때 아무 색도 선택되지 않은 채로 뜬다.
+     * 프리셋을 정리할 때 같이 놓치기 쉬워 함께 지킨다.
+     */
+    @Test
+    fun 기본_배경색은_프리셋에_들어있다() {
+        val default = WidgetAppearance().backgroundArgb
+        assertTrue(
+            "기본 배경색 #%06X 가 프리셋에 없다".format(default and 0xFFFFFF),
+            WIDGET_BACKGROUND_PRESETS.any { (_, argb) -> argb == default },
+        )
+    }
+
     /** 투명도를 배경 위에 합성해 실제로 보이는 색을 만든다. */
     private fun Color.flattenOver(background: Color): Color = Color(
         red = red * alpha + background.red * (1 - alpha),

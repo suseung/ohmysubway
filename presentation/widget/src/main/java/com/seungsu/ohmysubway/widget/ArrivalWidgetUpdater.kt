@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.os.PowerManager
 import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -206,12 +207,12 @@ object ArrivalWidgetUpdater {
                 onFailure = { error ->
                     if (error is CancellationException) throw error
                     logFailure(context, error)
-                    lastFailure = current.copy(loading = false, errorMessage = FAILED_MESSAGE)
+                    lastFailure = current.copy(loading = false, errorMessage = failureMessage(context))
                     if (attempt < FETCH_ATTEMPTS - 1) delay(RETRY_DELAY_MILLIS)
                 },
             )
         }
-        return lastFailure ?: current.copy(loading = false, errorMessage = FAILED_MESSAGE)
+        return lastFailure ?: current.copy(loading = false, errorMessage = failureMessage(context))
     }
 
     /**
@@ -227,16 +228,32 @@ object ArrivalWidgetUpdater {
     }
 
     /**
-     * 실패 원인을 로그로 남긴다.
+     * 실패했을 때 보여줄 문구를 고른다.
      *
-     * 절전모드에서는 앱의 네트워크가 정책으로 막히면 activeNetwork 가 null 로 온다.
-     * 데이터를 꺼둔 것과 구분이 되지 않으므로 이걸로 조회를 막지는 않는다 —
-     * 위젯 탭은 잠깐 예외를 받기 때문에 막힌 것처럼 보여도 요청이 성공할 수 있다.
+     * 절전모드가 켜져 있고 이 앱이 배터리 최적화에서 빠져 있지 않으면, 시스템이 백그라운드
+     * 네트워크를 방화벽에서 막는다. 실측(SM-G996N)으로는 DNS 가 0ms 만에 isBlocked=true 로
+     * 끊겼다. 이건 코드로 뚫을 수 없고 사용자가 설정에서 풀어줘야 하므로, 그걸 알 수 있게 쓴다.
+     * "네트워크가 꺼져 있어요" 처럼 쓰면 데이터를 꺼둔 줄 알게 되어 오해를 부른다.
      */
+    private fun failureMessage(context: Context): String =
+        if (isBlockedByPowerSave(context)) POWER_SAVE_BLOCKED_MESSAGE else FAILED_MESSAGE
+
+    private fun isBlockedByPowerSave(context: Context): Boolean {
+        val power = context.getSystemService(PowerManager::class.java) ?: return false
+        if (!power.isPowerSaveMode) return false
+        return !runCatching { power.isIgnoringBatteryOptimizations(context.packageName) }
+            .getOrDefault(true)
+    }
+
     private fun logFailure(context: Context, error: Throwable) {
         val manager = context.getSystemService(ConnectivityManager::class.java)
         val active = runCatching { manager?.activeNetwork }.getOrNull()
-        Log.w(TAG, "새로고침 실패 (activeNetwork=${if (active == null) "null" else "있음"})", error)
+        Log.w(
+            TAG,
+            "새로고침 실패 (activeNetwork=${if (active == null) "null" else "있음"}, " +
+                "절전차단=${isBlockedByPowerSave(context)})",
+            error,
+        )
     }
 
     private suspend fun readDataLocked(context: Context, glanceId: GlanceId): ArrivalWidgetData =
@@ -274,6 +291,7 @@ object ArrivalWidgetUpdater {
     }
 
     private const val TAG = "ArrivalWidget"
+    private const val POWER_SAVE_BLOCKED_MESSAGE = "절전모드가 막고 있어요"
     private const val SLOW_NETWORK_MESSAGE = "절전모드라 느려요. 다시 눌러주세요"
     private const val FAILED_MESSAGE = "새로고침에 실패했어요. 다시 눌러주세요"
     private const val FETCH_ATTEMPTS = 2

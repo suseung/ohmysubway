@@ -5,7 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -144,12 +144,6 @@ object ArrivalWidgetUpdater {
             }
         }
 
-        // 절전모드에서 데이터가 끊겨 있으면 기다릴 이유가 없다. 바로 알려준다.
-        if (!hasNetwork(context)) {
-            persist(context, glanceId, current.copy(loading = false, errorMessage = NO_NETWORK_MESSAGE))
-            return
-        }
-
         val refreshed = try {
             withTimeoutOrNull(ArrivalWidgetData.REFRESH_BUDGET_MILLIS) {
                 fetchWithRetry(context, current)
@@ -211,6 +205,7 @@ object ArrivalWidgetUpdater {
                 },
                 onFailure = { error ->
                     if (error is CancellationException) throw error
+                    logFailure(context, error)
                     lastFailure = current.copy(loading = false, errorMessage = FAILED_MESSAGE)
                     if (attempt < FETCH_ATTEMPTS - 1) delay(RETRY_DELAY_MILLIS)
                 },
@@ -231,12 +226,17 @@ object ArrivalWidgetUpdater {
         }
     }
 
-    /** 지금 인터넷이 되는 상태인지. 절전모드에서 데이터가 꺼져 있으면 기다리지 않고 바로 알려준다. */
-    private fun hasNetwork(context: Context): Boolean {
-        val manager = context.getSystemService(ConnectivityManager::class.java) ?: return true
-        val network = manager.activeNetwork ?: return false
-        val capabilities = manager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    /**
+     * 실패 원인을 로그로 남긴다.
+     *
+     * 절전모드에서는 앱의 네트워크가 정책으로 막히면 activeNetwork 가 null 로 온다.
+     * 데이터를 꺼둔 것과 구분이 되지 않으므로 이걸로 조회를 막지는 않는다 —
+     * 위젯 탭은 잠깐 예외를 받기 때문에 막힌 것처럼 보여도 요청이 성공할 수 있다.
+     */
+    private fun logFailure(context: Context, error: Throwable) {
+        val manager = context.getSystemService(ConnectivityManager::class.java)
+        val active = runCatching { manager?.activeNetwork }.getOrNull()
+        Log.w(TAG, "새로고침 실패 (activeNetwork=${if (active == null) "null" else "있음"})", error)
     }
 
     private suspend fun readDataLocked(context: Context, glanceId: GlanceId): ArrivalWidgetData =
@@ -273,7 +273,7 @@ object ArrivalWidgetUpdater {
         throw lastError ?: IllegalStateException("위젯 상태 접근 실패")
     }
 
-    private const val NO_NETWORK_MESSAGE = "네트워크가 꺼져 있어요"
+    private const val TAG = "ArrivalWidget"
     private const val SLOW_NETWORK_MESSAGE = "절전모드라 느려요. 다시 눌러주세요"
     private const val FAILED_MESSAGE = "새로고침에 실패했어요. 다시 눌러주세요"
     private const val FETCH_ATTEMPTS = 2

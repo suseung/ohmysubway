@@ -2,7 +2,9 @@ package com.seungsu.ohmysubway.widget.config
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -152,7 +154,12 @@ private fun AppearanceSection(
     )
     Spacer(modifier = Modifier.height(12.dp))
 
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    // 프리셋이 한 줄에 다 들어가지 않으므로 넘치면 다음 줄로 넘긴다
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         WIDGET_BACKGROUND_PRESETS.forEach { (name, argb) ->
             val selected = state.appearance.backgroundArgb == argb
             Column(
@@ -185,7 +192,6 @@ private fun AppearanceSection(
                     color = if (selected) colors.system.blue else colors.label.onBgSecondary,
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
         }
     }
 

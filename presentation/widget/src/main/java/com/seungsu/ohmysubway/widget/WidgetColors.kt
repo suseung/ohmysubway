@@ -41,6 +41,8 @@ val WIDGET_BACKGROUND_PRESETS: List<Pair<String, Int>> = listOf(
     "남색" to 0xFF12294A.toInt(),
     "지하철 초록" to 0xFF12503A.toInt(),
     "자주" to 0xFF3A1436.toInt(),
+    // 6호선 갈색(#CD7C2F)을 다른 프리셋과 같은 깊이로 낮춘 값. 색조는 그대로 두었다.
+    "갈색" to 0xFF6B4018.toInt(),
     "흰색" to 0xFFFFFFFF.toInt(),
     "연회색" to 0xFFE8EAED.toInt(),
 )

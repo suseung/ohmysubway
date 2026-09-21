@@ -20,11 +20,21 @@ data class ArrivalWidgetData(
         get() = startStation.isNotBlank() && destinationStation.isNotBlank()
 
     /**
-     * 조회가 진행 중인지. 조회 도중 프로세스가 죽으면 loading이 계속 남아 위젯이 영구히
-     * 새로고침되지 않으므로, 오래된 loading은 진행 중이 아닌 것으로 본다.
+     * 조회가 진행 중인지. 절전모드에서는 조회 도중 프로세스가 얼어붙거나 죽어서 loading이
+     * 그대로 남는 일이 잦다. 그러면 위젯이 영원히 "불러오는 중"으로 보이므로,
+     * 조회에 허용한 시간(REFRESH_BUDGET)을 넘긴 loading은 진행 중이 아닌 것으로 본다.
+     * 표시할 때도 이 값을 쓰기 때문에 남은 loading 표시가 저절로 풀린다.
      */
     fun isRefreshing(nowMillis: Long): Boolean =
         loading && nowMillis - loadingStartedAtMillis < LOADING_TIMEOUT_MILLIS
+
+    /**
+     * 조회에 실패했을 때 직전 결과를 그대로 보여줄 만한지.
+     * 실패할 때마다 화면을 비우면 절전모드에서 위젯이 계속 빈 채로 남는다.
+     */
+    fun hasUsableArrivals(nowMillis: Long): Boolean =
+        arrivals.isNotEmpty() && updatedAtMillis > 0 &&
+            nowMillis - updatedAtMillis < USABLE_ARRIVALS_MILLIS
 
     /**
      * API는 30초 주기로만 갱신되므로 그 안에 다시 조회해도 같은 데이터가 온다.
@@ -36,8 +46,19 @@ data class ArrivalWidgetData(
     fun encode(): String = json.encodeToString(serializer(), this)
 
     companion object {
-        const val LOADING_TIMEOUT_MILLIS = 20_000L
+        /**
+         * 한 번의 새로고침에 허용하는 시간. 위젯 탭은 브로드캐스트로 처리되는데,
+         * 절전모드에서는 이 짧은 처리 시간이 지나면 프로세스가 곧바로 얼어붙는다.
+         * 그 전에 반드시 결과(성공이든 실패든)를 써야 해서 넉넉하지 않게 잡는다.
+         */
+        const val REFRESH_BUDGET_MILLIS = 8_000L
+
+        /** 예산보다 조금 길게 — 결과를 쓰는 시간까지 감안한 loading 유효기간 */
+        const val LOADING_TIMEOUT_MILLIS = 10_000L
         const val DATA_REFRESH_INTERVAL_MILLIS = 30_000L
+
+        /** 이 시간 안에 받아둔 데이터면 새로고침이 실패해도 계속 보여준다 */
+        const val USABLE_ARRIVALS_MILLIS = 3 * 60_000L
 
         val PREF_KEY = stringPreferencesKey("arrival_widget_data")
 

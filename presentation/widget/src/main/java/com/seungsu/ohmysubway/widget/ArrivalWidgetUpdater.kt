@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -15,9 +17,13 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** 위젯 상태 저장/새로고침 담당. Glance 콜백에서는 Hilt 주입이 안 되므로 EntryPoint로 접근한다. */
 object ArrivalWidgetUpdater {
@@ -103,7 +109,16 @@ object ArrivalWidgetUpdater {
         refresh(context, glanceId)
     }
 
-    /** 저장된 설정으로 도착정보를 다시 조회해 위젯을 갱신한다. */
+    /**
+     * 저장된 설정으로 도착정보를 다시 조회해 위젯을 갱신한다.
+     *
+     * 절전모드 대응: 위젯 탭은 브로드캐스트로 들어오고, 그 처리 시간이 지나면 시스템이
+     * 프로세스를 얼리거나 죽인다. 30초 타임아웃으로 기다리면 응답을 받기 전에 잘려
+     * loading이 남은 채로 "불러오는 중"만 계속 보이게 된다. 그래서
+     * 1) 조회 전체에 예산(REFRESH_BUDGET_MILLIS)을 걸고,
+     * 2) 예산 안에서 한 번 더 시도하고,
+     * 3) 어떤 경우에도(취소 포함) 마지막에 결과를 반드시 저장한다.
+     */
     suspend fun refresh(context: Context, glanceId: GlanceId) {
         val current = stateMutex.withLock {
             val stored = readDataLocked(context, glanceId)
@@ -113,7 +128,11 @@ object ArrivalWidgetUpdater {
                 ArrivalAppWidget().update(context, glanceId)
                 return
             }
-            if (stored.isRefreshing(now)) return
+            if (stored.isRefreshing(now)) {
+                // 이미 조회 중. 화면만 다시 그려 남아 있던 표시를 정리한다
+                ArrivalAppWidget().update(context, glanceId)
+                return
+            }
             if (stored.isFresh(now)) {
                 // 30초 안에 다시 눌렀으면 같은 데이터라 호출을 생략하고 화면만 다시 그린다
                 ArrivalAppWidget().update(context, glanceId)
@@ -125,51 +144,99 @@ object ArrivalWidgetUpdater {
             }
         }
 
+        // 절전모드에서 데이터가 끊겨 있으면 기다릴 이유가 없다. 바로 알려준다.
+        if (!hasNetwork(context)) {
+            persist(context, glanceId, current.copy(loading = false, errorMessage = NO_NETWORK_MESSAGE))
+            return
+        }
+
+        val refreshed = try {
+            withTimeoutOrNull(ArrivalWidgetData.REFRESH_BUDGET_MILLIS) {
+                fetchWithRetry(context, current)
+            } ?: current.copy(loading = false, errorMessage = SLOW_NETWORK_MESSAGE)
+        } catch (e: CancellationException) {
+            // 브로드캐스트 처리 시간이 끝나 잘린 경우. loading을 남기지 않고 넘긴다.
+            persist(context, glanceId, current.copy(loading = false, errorMessage = SLOW_NETWORK_MESSAGE))
+            throw e
+        } catch (e: Exception) {
+            current.copy(loading = false, errorMessage = FAILED_MESSAGE)
+        }
+
+        persist(context, glanceId, refreshed)
+    }
+
+    /**
+     * 예산이 남아 있는 한 한 번 더 시도한다.
+     * 절전모드에서 깨어난 직후에는 통신 모듈이 아직 붙지 않아 첫 시도가 곧바로 실패하는 일이 많다.
+     */
+    private suspend fun fetchWithRetry(context: Context, current: ArrivalWidgetData): ArrivalWidgetData {
         val useCase = EntryPointAccessors
             .fromApplication(context, WidgetEntryPoint::class.java)
             .getDirectedArrivalsUseCase()
-
-        val refreshed = runCatching {
-            useCase(
-                GetDirectedArrivalsUseCase.Params(
-                    startStation = current.startStation,
-                    destinationStation = current.destinationStation,
-                ),
-            )
-        }.fold(
-            onSuccess = { result ->
-                when (result) {
-                    is DirectedArrivals.NotConnected -> current.copy(
-                        loading = false,
-                        errorMessage = "두 역이 같은 노선으로 연결되어 있지 않아요",
-                    )
-
-                    is DirectedArrivals.Success -> {
-                        val fetchedAt = System.currentTimeMillis()
-                        current.copy(
-                            loading = false,
-                            errorMessage = null,
-                            updatedAtMillis = fetchedAt,
-                            arrivals = result.arrivals.take(MAX_WIDGET_ARRIVALS).map { directed ->
-                                // 데이터 지연을 보정한 남은 시간으로 도착 예정 시각을 만든다
-                                val remaining = directed.arrival.remainingSeconds(fetchedAt)
-                                WidgetArrivalItem(
-                                    lineName = directed.lineName,
-                                    message = directed.arrival.arrivalMessage,
-                                    terminalStation = directed.arrival.terminalStation,
-                                    arrivalAtMillis = remaining?.let { fetchedAt + it * 1000L },
-                                )
-                            },
-                        )
-                    }
-                }
-            },
-            onFailure = {
-                current.copy(loading = false, errorMessage = "새로고침에 실패했어요. 다시 눌러주세요")
-            },
+        val params = GetDirectedArrivalsUseCase.Params(
+            startStation = current.startStation,
+            destinationStation = current.destinationStation,
         )
 
-        stateMutex.withLock { writeDataLocked(context, glanceId, refreshed) }
+        var lastFailure: ArrivalWidgetData? = null
+        repeat(FETCH_ATTEMPTS) { attempt ->
+            val result = runCatching { useCase(params) }
+            result.fold(
+                onSuccess = { directed ->
+                    return when (directed) {
+                        is DirectedArrivals.NotConnected -> current.copy(
+                            loading = false,
+                            errorMessage = "두 역이 같은 노선으로 연결되어 있지 않아요",
+                        )
+
+                        is DirectedArrivals.Success -> {
+                            val fetchedAt = System.currentTimeMillis()
+                            current.copy(
+                                loading = false,
+                                errorMessage = null,
+                                updatedAtMillis = fetchedAt,
+                                arrivals = directed.arrivals.take(MAX_WIDGET_ARRIVALS).map { item ->
+                                    // 데이터 지연을 보정한 남은 시간으로 도착 예정 시각을 만든다
+                                    val remaining = item.arrival.remainingSeconds(fetchedAt)
+                                    WidgetArrivalItem(
+                                        lineName = item.lineName,
+                                        message = item.arrival.arrivalMessage,
+                                        terminalStation = item.arrival.terminalStation,
+                                        arrivalAtMillis = remaining?.let { fetchedAt + it * 1000L },
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+                onFailure = { error ->
+                    if (error is CancellationException) throw error
+                    lastFailure = current.copy(loading = false, errorMessage = FAILED_MESSAGE)
+                    if (attempt < FETCH_ATTEMPTS - 1) delay(RETRY_DELAY_MILLIS)
+                },
+            )
+        }
+        return lastFailure ?: current.copy(loading = false, errorMessage = FAILED_MESSAGE)
+    }
+
+    /**
+     * 결과를 반드시 저장한다. 취소된 뒤에 불려도 저장이 끊기지 않도록 NonCancellable로 감싼다.
+     * 이걸 놓치면 loading이 남아 위젯이 계속 "불러오는 중"으로 보인다.
+     */
+    private suspend fun persist(context: Context, glanceId: GlanceId, data: ArrivalWidgetData) {
+        withContext(NonCancellable) {
+            runCatching {
+                stateMutex.withLock { writeDataLocked(context, glanceId, data) }
+            }
+        }
+    }
+
+    /** 지금 인터넷이 되는 상태인지. 절전모드에서 데이터가 꺼져 있으면 기다리지 않고 바로 알려준다. */
+    private fun hasNetwork(context: Context): Boolean {
+        val manager = context.getSystemService(ConnectivityManager::class.java) ?: return true
+        val network = manager.activeNetwork ?: return false
+        val capabilities = manager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private suspend fun readDataLocked(context: Context, glanceId: GlanceId): ArrivalWidgetData =
@@ -206,6 +273,11 @@ object ArrivalWidgetUpdater {
         throw lastError ?: IllegalStateException("위젯 상태 접근 실패")
     }
 
+    private const val NO_NETWORK_MESSAGE = "네트워크가 꺼져 있어요"
+    private const val SLOW_NETWORK_MESSAGE = "절전모드라 느려요. 다시 눌러주세요"
+    private const val FAILED_MESSAGE = "새로고침에 실패했어요. 다시 눌러주세요"
+    private const val FETCH_ATTEMPTS = 2
+    private const val RETRY_DELAY_MILLIS = 300L
     private const val RERENDER_REQUEST_CODE = 1001
     private const val STOP_GRACE_MILLIS = 1_000L
     private const val STATE_ACCESS_ATTEMPTS = 5

@@ -1,6 +1,10 @@
 package com.seungsu.ohmysubway.guide
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.design.compose.ThemePreview
 import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
@@ -97,6 +102,21 @@ fun GuideScreen(onBackClick: () -> Unit) {
             )
 
             Spacer(Modifier.height(28.dp))
+            SectionTitle("절전모드에서 새로고침이 안 될 때")
+            Paragraph(
+                "절전모드에서는 위젯을 눌러도 시스템이 앱을 금방 멈춰 세워서, 조회가 끝나기 전에 " +
+                    "끊길 수 있습니다. 이 앱은 8초 안에 끝내고 실패하면 바로 알려주도록 만들었지만, " +
+                    "데이터 자체가 막혀 있으면 어쩔 수 없습니다.",
+            )
+            Spacer(Modifier.height(8.dp))
+            Paragraph(
+                "계속 실패한다면 휴대폰 설정에서 이 앱만 배터리 제한에서 빼주세요. " +
+                    "삼성 휴대폰은 \"배터리 → 제한 없음\", 그 외에는 \"배터리 최적화 안 함\"으로 두면 됩니다.",
+            )
+            Spacer(Modifier.height(12.dp))
+            BatterySettingsButton()
+
+            Spacer(Modifier.height(28.dp))
             Text(
                 text = "측정 조건 — 2026년 8월 12일 18~19시, 역 8곳에서 도착정보 98건을 표본으로 " +
                     "측정했습니다. 시간대와 운행 상황에 따라 달라질 수 있습니다.",
@@ -104,6 +124,40 @@ fun GuideScreen(onBackClick: () -> Unit) {
                 color = colors.label.onBgTertiary,
             )
         }
+    }
+}
+
+/** 이 앱의 배터리 설정 화면을 바로 연다. 기기마다 위치가 달라 앱 정보 화면으로 보낸다. */
+@Composable
+private fun BatterySettingsButton() {
+    val context = LocalContext.current
+    val colors = OhMySubwayTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colors.background.groupedBase)
+            .clickable {
+                val intent = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", context.packageName, null),
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                runCatching { context.startActivity(intent) }
+            }
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "이 앱의 배터리 설정 열기",
+            style = OhMySubwayTheme.typos.bold.font14,
+            color = colors.system.blue,
+        )
+        Text(
+            text = "›",
+            style = OhMySubwayTheme.typos.bold.font16,
+            color = colors.label.onBgTertiary,
+        )
     }
 }
 

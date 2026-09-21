@@ -63,6 +63,7 @@ class ArrivalAppWidget : GlanceAppWidget() {
 @Composable
 private fun WidgetContent(data: ArrivalWidgetData) {
     val size = LocalSize.current
+    val now = System.currentTimeMillis()
     val colors = data.appearance.resolveColors()
     val compact = size.height < COMPACT_HEIGHT
     val showTerminal = size.width >= TERMINAL_MIN_WIDTH
@@ -82,12 +83,30 @@ private fun WidgetContent(data: ArrivalWidgetData) {
             .clickable(actionRunCallback<RefreshArrivalAction>())
             .padding(horizontal = 10.dp, vertical = if (compact) 6.dp else 10.dp),
     ) {
-        HeaderRow(data = data, colors = colors, compact = compact, showUpdatedAt = showUpdatedAt)
+        HeaderRow(
+            data = data,
+            colors = colors,
+            compact = compact,
+            showUpdatedAt = showUpdatedAt,
+            stale = data.errorMessage != null,
+        )
         if (!compact) Spacer(GlanceModifier.height(6.dp))
 
         when {
             !data.configured -> InfoText("역을 설정해주세요", colors.secondaryText, compact)
-            data.loading -> InfoText("불러오는 중…", colors.secondaryText, compact)
+            // loading 플래그만 보면 절전모드에서 조회가 잘렸을 때 영원히 "불러오는 중"이 된다.
+            // 시간까지 따져서 오래된 loading은 그냥 없는 것으로 본다.
+            data.isRefreshing(now) -> InfoText("불러오는 중…", colors.secondaryText, compact)
+            // 새로고침에 실패해도 얼마 전에 받아둔 도착정보가 있으면 비우지 않고 그대로 보여준다
+            data.hasUsableArrivals(now) -> data.arrivals.take(maxRows).forEachIndexed { index, item ->
+                if (index > 0) Spacer(GlanceModifier.height(2.dp))
+                ArrivalRow(
+                    item = item,
+                    colors = colors,
+                    compact = compact,
+                    showTerminal = showTerminal,
+                )
+            }
             data.errorMessage != null -> InfoText(data.errorMessage, colors.secondaryText, compact)
             data.arrivals.isEmpty() -> InfoText("눌러서 새로고침", colors.secondaryText, compact)
             else -> data.arrivals.take(maxRows).forEachIndexed { index, item ->
@@ -109,6 +128,7 @@ private fun HeaderRow(
     colors: ResolvedWidgetColors,
     compact: Boolean,
     showUpdatedAt: Boolean,
+    stale: Boolean,
 ) {
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
@@ -130,7 +150,8 @@ private fun HeaderRow(
         )
         if (showUpdatedAt && data.updatedAtMillis > 0) {
             Text(
-                text = formatTime(data.updatedAtMillis),
+                // 새로고침이 실패해 예전 정보를 보여주는 중이면 시각 앞에 표시를 남긴다
+                text = if (stale) "!${formatTime(data.updatedAtMillis)}" else formatTime(data.updatedAtMillis),
                 style = TextStyle(
                     color = androidx.glance.unit.ColorProvider(colors.secondaryText),
                     fontSize = 10.sp,

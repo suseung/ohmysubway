@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 절전모드에서 데이터가 꺼져 있으면 기다리지 않고 바로 안내하기 위해 확인한다 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application>
         <receiver
             android:name="com.seungsu.ohmysubway.widget.ArrivalWidgetReceiver"

@@ -48,8 +48,11 @@ object NetworkModule {
     fun provideOkHttpClient(
         chuckerInterceptor: ChuckerInterceptor?
     ): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        // 위젯 탭은 브로드캐스트로 처리돼 시간이 얼마 없다. 30초를 기다리면
+        // 절전모드에서 응답 전에 프로세스가 잘려 "불러오는 중"만 남는다.
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .callTimeout(7, TimeUnit.SECONDS)
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })

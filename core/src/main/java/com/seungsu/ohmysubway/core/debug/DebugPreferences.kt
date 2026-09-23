@@ -18,8 +18,14 @@ object DebugPreferences {
     private const val FILE_NAME = "ohmy_debug_prefs"
     private const val KEY_CHUCKER_ENABLED = "chucker_enabled"
 
-    /** 디버그 빌드에서는 켜둔 채로 시작한다. 끄고 싶을 때 드로어에서 끄면 된다. */
-    private const val DEFAULT_CHUCKER_ENABLED = true
+    /**
+     * **기본은 꺼짐이다.**
+     *
+     * 켜 두면 디버그로 앱을 쓰는 동안 모든 요청·응답이 기기 안 DB 로 계속 쌓인다.
+     * 로그인 토큰이나 사용자가 쓴 글이 오가는 앱이면 그게 그대로 남는다. 볼 이유가
+     * 있을 때 사람이 직접 켜는 게 맞다.
+     */
+    private const val DEFAULT_CHUCKER_ENABLED = false
 
     @Volatile
     private var cached: Boolean? = null

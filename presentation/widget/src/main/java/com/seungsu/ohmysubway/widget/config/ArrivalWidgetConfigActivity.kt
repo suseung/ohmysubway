@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +24,9 @@ class ArrivalWidgetConfigActivity : ComponentActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 35+ 는 앱이 상태바 뒤까지 그리도록 강제된다. 이걸 부르지 않으면 상태바 아이콘 색을
+        // 시스템이 흰색으로 두어, 흰 배경에서는 시각·배터리가 아예 안 보이고 빈 띠처럼 보인다.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setResult(RESULT_CANCELED)
 

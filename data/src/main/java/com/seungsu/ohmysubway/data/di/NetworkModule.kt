@@ -46,6 +46,7 @@ object NetworkModule {
 
     @Provides @Singleton
     fun provideOkHttpClient(
+        @ApplicationContext context: Context,
         chuckerInterceptor: ChuckerInterceptor?
     ): OkHttpClient = OkHttpClient.Builder()
         // 위젯 탭은 브로드캐스트로 처리돼 시간이 얼마 없다. 30초를 기다리면
@@ -57,8 +58,10 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         })
         .apply {
+            // 인터셉터는 항상 끼워두고, 기록할지 말지는 요청 시점에 디버그 드로어의
+            // 스위치를 보고 정한다. 넣었다 빼는 방식이면 앱을 다시 띄워야 반영된다.
             if (BuildConfig.DEBUG && chuckerInterceptor != null) {
-                addInterceptor(chuckerInterceptor)
+                addInterceptor(ChuckerToggleInterceptor(context, chuckerInterceptor))
             }
         }
         .build()

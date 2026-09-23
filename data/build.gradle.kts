@@ -28,12 +28,16 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(project(":domain"))
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.bundles.retrofit)
     implementation(libs.bundles.okhttp)
-    implementation(libs.chucker)
+    // 인스펙터 UI 는 debug 에만. main 소스가 ChuckerInterceptor 를 참조하므로
+    // compileOnly 가 아니라 release 에 같은 API 의 no-op 를 넣어야 한다.
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.no.op)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)

@@ -46,6 +46,8 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.timber)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.no.op)
     implementation(libs.androidx.glance.appwidget)
 
     androidTestImplementation(libs.androidx.test.ext.junit)

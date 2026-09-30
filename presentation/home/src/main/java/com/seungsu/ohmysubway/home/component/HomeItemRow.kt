@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.common.util.formatRemaining
-import com.seungsu.ohmysubway.design.compose.ThemePreview
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.ThemePreview
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.domain.model.Arrival
 import com.seungsu.ohmysubway.domain.model.DirectedArrival
 import com.seungsu.ohmysubway.domain.util.stationDisplayName
@@ -27,7 +27,7 @@ fun HomeItemRow(
     directedArrival: DirectedArrival,
     modifier: Modifier = Modifier,
 ) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -38,7 +38,7 @@ fun HomeItemRow(
     ) {
         Text(
             text = directedArrival.lineName,
-            style = OhMySubwayTheme.typos.bold.font12,
+            style = SsTheme.typos.bold.font12,
             color = colors.system.blue,
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -49,12 +49,12 @@ fun HomeItemRow(
             }
             Text(
                 text = remaining?.let(::formatRemaining) ?: directedArrival.arrival.arrivalMessage,
-                style = OhMySubwayTheme.typos.bold.font16,
+                style = SsTheme.typos.bold.font16,
                 color = colors.label.onBgPrimary,
             )
             Text(
                 text = "${directedArrival.arrival.terminalStation.stationDisplayName}행 · ${directedArrival.arrival.trainStatus}",
-                style = OhMySubwayTheme.typos.regular.font12,
+                style = SsTheme.typos.regular.font12,
                 color = colors.label.onBgSecondary,
             )
         }
@@ -64,7 +64,7 @@ fun HomeItemRow(
 @ThemePreview
 @Composable
 private fun HomeItemRowPreview() {
-    OhMySubwayTheme {
+    SsTheme {
         HomeItemRow(
             directedArrival = DirectedArrival(
                 lineName = "2호선",

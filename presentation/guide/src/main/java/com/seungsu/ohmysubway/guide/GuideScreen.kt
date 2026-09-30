@@ -29,12 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.seungsu.ohmysubway.design.compose.ThemePreview
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.ThemePreview
+import com.suseung.designsystem.theme.SsTheme
 
 @Composable
 fun GuideScreen(onBackClick: () -> Unit) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,7 +51,7 @@ fun GuideScreen(onBackClick: () -> Unit) {
             }
             Text(
                 text = "도착시간 안내",
-                style = OhMySubwayTheme.typos.bold.font18,
+                style = SsTheme.typos.bold.font18,
                 color = colors.label.onBgPrimary,
             )
         }
@@ -120,7 +120,7 @@ fun GuideScreen(onBackClick: () -> Unit) {
             Text(
                 text = "측정 조건 — 2026년 8월 12일 18~19시, 역 8곳에서 도착정보 98건을 표본으로 " +
                     "측정했습니다. 시간대와 운행 상황에 따라 달라질 수 있습니다.",
-                style = OhMySubwayTheme.typos.regular.font11,
+                style = SsTheme.typos.regular.font11,
                 color = colors.label.onBgTertiary,
             )
         }
@@ -131,7 +131,7 @@ fun GuideScreen(onBackClick: () -> Unit) {
 @Composable
 private fun BatterySettingsButton() {
     val context = LocalContext.current
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -150,12 +150,12 @@ private fun BatterySettingsButton() {
     ) {
         Text(
             text = "이 앱의 배터리 설정 열기",
-            style = OhMySubwayTheme.typos.bold.font14,
+            style = SsTheme.typos.bold.font14,
             color = colors.system.blue,
         )
         Text(
             text = "›",
-            style = OhMySubwayTheme.typos.bold.font16,
+            style = SsTheme.typos.bold.font16,
             color = colors.label.onBgTertiary,
         )
     }
@@ -165,8 +165,8 @@ private fun BatterySettingsButton() {
 private fun SectionTitle(text: String) {
     Text(
         text = text,
-        style = OhMySubwayTheme.typos.bold.font16,
-        color = OhMySubwayTheme.colors.label.onBgPrimary,
+        style = SsTheme.typos.bold.font16,
+        color = SsTheme.colors.label.onBgPrimary,
     )
     Spacer(Modifier.height(6.dp))
 }
@@ -175,14 +175,14 @@ private fun SectionTitle(text: String) {
 private fun Paragraph(text: String) {
     Text(
         text = text,
-        style = OhMySubwayTheme.typos.regular.font14,
-        color = OhMySubwayTheme.colors.label.onBgSecondary,
+        style = SsTheme.typos.regular.font14,
+        color = SsTheme.colors.label.onBgSecondary,
     )
 }
 
 @Composable
 private fun LineRow(info: LineDelayInfo) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,19 +198,19 @@ private fun LineRow(info: LineDelayInfo) {
         ) {
             Text(
                 text = info.lineName,
-                style = OhMySubwayTheme.typos.bold.font14,
+                style = SsTheme.typos.bold.font14,
                 color = colors.label.onBgPrimary,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = info.medianDelayText,
-                    style = OhMySubwayTheme.typos.bold.font16,
+                    style = SsTheme.typos.bold.font16,
                     color = colors.system.blue,
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "지연",
-                    style = OhMySubwayTheme.typos.regular.font11,
+                    style = SsTheme.typos.regular.font11,
                     color = colors.label.onBgTertiary,
                 )
             }
@@ -222,14 +222,14 @@ private fun LineRow(info: LineDelayInfo) {
             } else {
                 "범위 ${info.rangeText} · 초 단위 제공 없음"
             },
-            style = OhMySubwayTheme.typos.regular.font12,
+            style = SsTheme.typos.regular.font12,
             color = colors.label.onBgSecondary,
         )
         info.note?.let {
             Spacer(Modifier.height(6.dp))
             Text(
                 text = it,
-                style = OhMySubwayTheme.typos.regular.font12,
+                style = SsTheme.typos.regular.font12,
                 color = colors.system.red,
             )
         }
@@ -239,7 +239,7 @@ private fun LineRow(info: LineDelayInfo) {
 @ThemePreview
 @Composable
 private fun GuideScreenPreview() {
-    OhMySubwayTheme {
+    SsTheme {
         GuideScreen(onBackClick = {})
     }
 }

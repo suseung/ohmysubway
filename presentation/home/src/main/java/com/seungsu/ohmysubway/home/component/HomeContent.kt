@@ -21,8 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.seungsu.ohmysubway.common.component.StationSearchField
-import com.seungsu.ohmysubway.design.compose.ThemePreview
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.ThemePreview
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.home.HomeIntent
 import com.seungsu.ohmysubway.home.HomeState
 
@@ -33,7 +33,7 @@ fun HomeContent(
     onGuideClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -49,18 +49,18 @@ fun HomeContent(
         ) {
             Text(
                 text = "오마이지하철",
-                style = OhMySubwayTheme.typos.bold.font24,
+                style = SsTheme.typos.bold.font24,
                 color = colors.label.onBgPrimary,
                 modifier = Modifier.weight(1f),
             )
             TextButton(onClick = onGuideClick) {
-                Text(text = "정확도 안내", style = OhMySubwayTheme.typos.regular.font12)
+                Text(text = "정확도 안내", style = SsTheme.typos.regular.font12)
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "시작역과 도착역을 고르면 도착역 방면 열차의 실시간 도착정보를 보여드려요.",
-            style = OhMySubwayTheme.typos.regular.font14,
+            style = SsTheme.typos.regular.font14,
             color = colors.label.onBgSecondary,
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -96,13 +96,13 @@ fun HomeContent(
 
             state.errorMessage != null -> Text(
                 text = state.errorMessage.orEmpty(),
-                style = OhMySubwayTheme.typos.regular.font14,
+                style = SsTheme.typos.regular.font14,
                 color = colors.system.red,
             )
 
             state.lookedUp && state.arrivals.isEmpty() -> Text(
                 text = "도착 예정 열차가 없어요.",
-                style = OhMySubwayTheme.typos.regular.font14,
+                style = SsTheme.typos.regular.font14,
                 color = colors.label.onBgSecondary,
             )
 
@@ -117,7 +117,7 @@ fun HomeContent(
 @ThemePreview
 @Composable
 private fun HomeContentPreview() {
-    OhMySubwayTheme {
+    SsTheme {
         HomeContent(state = HomeState(startQuery = "강남", destQuery = "성수"), uiAction = {})
     }
 }

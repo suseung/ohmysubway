@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.seungsu.ohmysubway.common.component.StationSearchField
 import com.seungsu.ohmysubway.core.base.CollectEffect
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.widget.MIN_ALPHA
 import com.seungsu.ohmysubway.widget.WIDGET_BACKGROUND_PRESETS
 import com.seungsu.ohmysubway.widget.WidgetAppearance
@@ -72,7 +72,7 @@ private fun WidgetConfigContent(
     state: WidgetConfigState,
     uiAction: (WidgetConfigIntent) -> Unit,
 ) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -84,13 +84,13 @@ private fun WidgetConfigContent(
     ) {
         Text(
             text = "지하철 위젯 설정",
-            style = OhMySubwayTheme.typos.bold.font24,
+            style = SsTheme.typos.bold.font24,
             color = colors.label.onBgPrimary,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "시작역과 도착역을 고르면 도착역 방면 열차의\n실시간 도착정보를 위젯으로 보여드려요.",
-            style = OhMySubwayTheme.typos.regular.font14,
+            style = SsTheme.typos.regular.font14,
             color = colors.label.onBgSecondary,
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -116,7 +116,7 @@ private fun WidgetConfigContent(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "두 역이 같은 노선으로 연결되어 있지 않아요. 환승 없는 구간만 지원해요.",
-                style = OhMySubwayTheme.typos.regular.font12,
+                style = SsTheme.typos.regular.font12,
                 color = colors.system.red,
             )
         }
@@ -140,16 +140,16 @@ private fun AppearanceSection(
     state: WidgetConfigState,
     uiAction: (WidgetConfigIntent) -> Unit,
 ) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     Text(
         text = "위젯 색상",
-        style = OhMySubwayTheme.typos.bold.font16,
+        style = SsTheme.typos.bold.font16,
         color = colors.label.onBgPrimary,
     )
     Spacer(modifier = Modifier.height(4.dp))
     Text(
         text = "글자색은 배경에 맞춰 잘 보이는 색으로 자동 적용돼요.",
-        style = OhMySubwayTheme.typos.regular.font12,
+        style = SsTheme.typos.regular.font12,
         color = colors.label.onBgSecondary,
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -188,7 +188,7 @@ private fun AppearanceSection(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = name,
-                    style = OhMySubwayTheme.typos.regular.font11,
+                    style = SsTheme.typos.regular.font11,
                     color = if (selected) colors.system.blue else colors.label.onBgSecondary,
                 )
             }
@@ -199,13 +199,13 @@ private fun AppearanceSection(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "투명도",
-            style = OhMySubwayTheme.typos.regular.font14,
+            style = SsTheme.typos.regular.font14,
             color = colors.label.onBgPrimary,
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "${(state.appearance.backgroundAlpha * 100).toInt()}%",
-            style = OhMySubwayTheme.typos.bold.font14,
+            style = SsTheme.typos.bold.font14,
             color = colors.label.onBgSecondary,
         )
     }
@@ -225,8 +225,8 @@ private fun WidgetPreview(state: WidgetConfigState) {
     val resolved = state.appearance.resolveColors()
     Text(
         text = "미리보기",
-        style = OhMySubwayTheme.typos.regular.font12,
-        color = OhMySubwayTheme.colors.label.onBgSecondary,
+        style = SsTheme.typos.regular.font12,
+        color = SsTheme.colors.label.onBgSecondary,
     )
     Spacer(modifier = Modifier.height(6.dp))
     // 투명도가 체감되도록 배경화면 대신 격자 느낌의 받침을 깔아준다
@@ -255,20 +255,20 @@ private fun WidgetPreviewCard(
     ) {
         Text(
             text = "${state.selectedStart ?: "시작역"}→${state.selectedDest ?: "도착역"}",
-            style = OhMySubwayTheme.typos.bold.font14,
+            style = SsTheme.typos.bold.font14,
             color = resolved.primaryText,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "2호선",
-                style = OhMySubwayTheme.typos.bold.font12,
+                style = SsTheme.typos.bold.font12,
                 color = resolved.accent,
             )
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = "3분 20초 후",
-                style = OhMySubwayTheme.typos.regular.font14,
+                style = SsTheme.typos.regular.font14,
                 color = resolved.primaryText,
             )
         }

@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.widget.ArrivalWidgetUpdater
 import com.seungsu.ohmysubway.widget.WidgetAppearance
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,7 +43,7 @@ class ArrivalWidgetConfigActivity : ComponentActivity() {
         loadExistingSettings()
 
         setContent {
-            OhMySubwayTheme {
+            SsTheme {
                 WidgetConfigScreen(
                     viewModel = viewModel,
                     onComplete = ::completeConfiguration,

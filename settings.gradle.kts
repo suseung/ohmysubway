@@ -1,3 +1,11 @@
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+fun secret(key: String, envKey: String): String =
+    localProperties.getProperty(key) ?: System.getenv(envKey) ?: ""
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -17,6 +25,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/suseung/ohmydesignsystem")
+            credentials {
+                username = secret("gpr.user", "GPR_USER")
+                password = secret("gpr.key", "GITHUB_TOKEN")
+            }
+        }
     }
 }
 

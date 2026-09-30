@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.domain.model.StationSummary
 
 /** 역 이름 검색 입력 + 검색 결과 목록. 결과를 탭하면 선택된다. */
@@ -29,7 +29,7 @@ fun StationSearchField(
     onSelect: (StationSummary) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = OhMySubwayTheme.colors
+    val colors = SsTheme.colors
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     Column(modifier = modifier) {
@@ -38,7 +38,7 @@ fun StationSearchField(
             onValueChange = onQueryChange,
             label = { Text(label) },
             singleLine = true,
-            textStyle = OhMySubwayTheme.typos.regular.font16,
+            textStyle = SsTheme.typos.regular.font16,
             colors = OutlinedTextFieldDefaults.colors(
                 // 창 배경은 항상 라이트인데 테마는 시스템 다크를 따라가므로,
                 // 다크모드에서 흰 배경 + 흰 글씨가 되지 않도록 명시한다.
@@ -67,13 +67,13 @@ fun StationSearchField(
             ) {
                 Text(
                     text = station.name,
-                    style = OhMySubwayTheme.typos.bold.font14,
+                    style = SsTheme.typos.bold.font14,
                     color = colors.label.onBgPrimary,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = station.lineNames.joinToString(" · "),
-                    style = OhMySubwayTheme.typos.regular.font12,
+                    style = SsTheme.typos.regular.font12,
                     color = colors.label.onBgSecondary,
                 )
             }

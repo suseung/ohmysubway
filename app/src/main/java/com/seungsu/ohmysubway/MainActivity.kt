@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import com.seungsu.ohmysubway.debug.DebugDrawerHost
-import com.seungsu.ohmysubway.design.compose.theme.OhMySubwayTheme
+import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.navigation.OhMySubwayNavHost
 
 @AndroidEntryPoint
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            OhMySubwayTheme {
+            SsTheme {
                 DebugDrawerHost {
                     OhMySubwayNavHost()
                 }

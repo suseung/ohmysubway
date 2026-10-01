@@ -5,6 +5,14 @@ plugins {
 
 android {
     namespace = "com.seungsu.ohmysubway.core"
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    defaultConfig {
+        buildConfigField("String", "CORE_VERSION", "\"0.2.0\"")
+    }
 }
 
 dependencies {

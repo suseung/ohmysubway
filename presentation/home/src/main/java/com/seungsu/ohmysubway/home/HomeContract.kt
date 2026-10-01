@@ -1,8 +1,8 @@
 package com.seungsu.ohmysubway.home
 
-import com.seungsu.ohmysubway.core.mvi.ViewEffect
-import com.seungsu.ohmysubway.core.mvi.ViewIntent
-import com.seungsu.ohmysubway.core.mvi.ViewState
+import com.suseung.core.mvi.ViewEffect
+import com.suseung.core.mvi.ViewIntent
+import com.suseung.core.mvi.ViewState
 import com.seungsu.ohmysubway.domain.model.DirectedArrival
 import com.seungsu.ohmysubway.domain.model.StationSummary
 

@@ -2,7 +2,7 @@ package com.seungsu.ohmysubway.data.di
 
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.seungsu.ohmysubway.core.debug.DebugPreferences
+import com.suseung.core.debug.DebugPreferences
 import okhttp3.Interceptor
 import okhttp3.Response
 

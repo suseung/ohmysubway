@@ -26,8 +26,16 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            name = "GitHubPackages"
+            name = "GitHubPackagesDesignSystem"
             url = uri("https://maven.pkg.github.com/suseung/ohmydesignsystem")
+            credentials {
+                username = secret("gpr.user", "GPR_USER")
+                password = secret("gpr.key", "GITHUB_TOKEN")
+            }
+        }
+        maven {
+            name = "GitHubPackagesCore"
+            url = uri("https://maven.pkg.github.com/suseung/ohmycore")
             credentials {
                 username = secret("gpr.user", "GPR_USER")
                 password = secret("gpr.key", "GITHUB_TOKEN")

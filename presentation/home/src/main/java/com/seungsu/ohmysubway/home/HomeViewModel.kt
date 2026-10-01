@@ -1,6 +1,6 @@
 package com.seungsu.ohmysubway.home
 
-import com.seungsu.ohmysubway.core.mvi.MVIViewModel
+import com.suseung.core.mvi.MVIViewModel
 import com.seungsu.ohmysubway.domain.model.DirectedArrivals
 import com.seungsu.ohmysubway.domain.model.StationSummary
 import com.seungsu.ohmysubway.domain.usecase.GetDirectedArrivalsUseCase

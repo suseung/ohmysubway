@@ -43,7 +43,7 @@ import androidx.compose.ui.zIndex
 import com.chuckerteam.chucker.api.Chucker
 import com.seungsu.ohmysubway.BuildConfig
 import com.seungsu.ohmysubway.design.compose.BuildConfig as DesignSystemBuildConfig
-import com.seungsu.ohmysubway.core.debug.DebugPreferences
+import com.suseung.core.debug.DebugPreferences
 import kotlinx.coroutines.launch
 
 /** 화면 오른쪽 끝에서 이만큼 안쪽까지가 드로어를 여는 손잡이다. */

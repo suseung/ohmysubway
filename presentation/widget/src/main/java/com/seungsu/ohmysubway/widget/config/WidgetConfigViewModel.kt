@@ -1,6 +1,6 @@
 package com.seungsu.ohmysubway.widget.config
 
-import com.seungsu.ohmysubway.core.mvi.MVIViewModel
+import com.suseung.core.mvi.MVIViewModel
 import com.seungsu.ohmysubway.domain.model.StationSummary
 import com.seungsu.ohmysubway.domain.repository.SubwayLineRepository
 import com.seungsu.ohmysubway.domain.usecase.SearchStationsUseCase

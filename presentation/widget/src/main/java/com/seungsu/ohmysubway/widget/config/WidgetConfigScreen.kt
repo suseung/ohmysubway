@@ -36,7 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.seungsu.ohmysubway.common.component.StationSearchField
-import com.seungsu.ohmysubway.core.base.CollectEffect
+import com.suseung.core.base.CollectEffect
 import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.widget.MIN_ALPHA
 import com.seungsu.ohmysubway.widget.WIDGET_BACKGROUND_PRESETS

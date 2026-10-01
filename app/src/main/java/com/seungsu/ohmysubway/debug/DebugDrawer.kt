@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.chuckerteam.chucker.api.Chucker
 import com.seungsu.ohmysubway.BuildConfig
+import com.seungsu.ohmysubway.design.compose.BuildConfig as DesignSystemBuildConfig
 import com.seungsu.ohmysubway.core.debug.DebugPreferences
 import kotlinx.coroutines.launch
 
@@ -184,6 +185,7 @@ private fun DebugPanel(onClose: () -> Unit) {
         SectionLabel("Build")
         InfoRow("applicationId", BuildConfig.APPLICATION_ID)
         InfoRow("version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        InfoRow("designsystem", DesignSystemBuildConfig.DESIGNSYSTEM_VERSION)
         Spacer(modifier = Modifier.height(16.dp))
     }
 }

@@ -47,24 +47,28 @@ import com.seungsu.ohmysubway.core.BuildConfig as CoreBuildConfig
 import com.suseung.core.debug.DebugPreferences
 import kotlinx.coroutines.launch
 
-/** 화면 오른쪽 끝에서 이만큼 안쪽까지가 드로어를 여는 손잡이다. */
-private val EDGE_WIDTH = 32.dp
+/** 화면 위쪽 끝에서 이만큼 안쪽까지가 드로어를 여는 손잡이다. */
+private val EDGE_DEPTH = 32.dp
 
 /**
- * 손잡이의 세로 길이. 화면 높이만큼 늘리지 않고 200dp 로 못 박는다.
+ * 손잡이의 가로 길이. 화면 너비만큼 늘리지 않고 200dp 로 못 박는다.
  *
- * 오른쪽 가장자리는 시스템 뒤로가기 제스처 구역이라, 그냥 두면 여기서 쓸어도
- * 드로어 대신 앱이 종료된다. [Modifier.systemGestureExclusion] 으로 비켜달라고
- * 요청할 수 있는데 **한 모서리당 200dp 까지만 들어준다.** 더 길게 잡으면 시스템이
- * 임의로 잘라서, 손잡이 어디를 잡느냐에 따라 어떤 날은 열리고 어떤 날은 뒤로
- * 가는 앱이 된다. 그래서 처음부터 들어주는 만큼만 잡는다.
+ * [Modifier.systemGestureExclusion] 으로 시스템 제스처를 비켜달라고 요청할 수 있는데
+ * **한 모서리당 200dp 까지만 들어준다.** 더 길게 잡으면 시스템이 임의로 잘라서, 손잡이
+ * 어디를 잡느냐에 따라 어떤 날은 열리고 어떤 날은 안 열리는 손잡이가 된다. 그래서
+ * 처음부터 들어주는 만큼만 잡는다.
+ *
+ * **왼쪽 위 모서리에 두는 이유.** 왼쪽·오른쪽 가장자리 전체는 시스템 뒤로가기 제스처
+ * 구역이라, 화면 세로 중간에 손잡이를 두면 그냥 쓸어도 드로어 대신 앱이 뒤로가기/종료된다.
+ * 위쪽 모서리는 뒤로가기 제스처와 안 겹친다(대신 알림 셰이드를 당길 수 있는 자리지만, 그건
+ * 아래로 쓸어야 열려서 가로 드래그와는 안 부딪힌다).
  */
-private val HANDLE_HEIGHT = 200.dp
+private val HANDLE_LENGTH = 200.dp
 
 private val DRAWER_WIDTH = 300.dp
 
 /**
- * 오른쪽에서 왼쪽으로 쓸면 열리는 디버그 서랍.
+ * 왼쪽 위 모서리에서 오른쪽으로 쓸면 열리는 디버그 서랍.
  *
  * 릴리즈 빌드에서는 [content] 를 그대로 내보내고 아무것도 감싸지 않는다.
  *
@@ -75,7 +79,7 @@ private val DRAWER_WIDTH = 300.dp
  *
  * **왜 드로어 자체의 스와이프를 끄나.** gesturesEnabled 를 켜두면 드로어가 화면
  * 전체의 가로 드래그를 가져간다. 그러면 달력 좌우 넘기기나 리스트 가로 스크롤이
- * 디버그 빌드에서만 안 먹는다. 닫혀 있을 때는 오른쪽 가장자리 [EDGE_WIDTH] 띠만
+ * 디버그 빌드에서만 안 먹는다. 닫혀 있을 때는 왼쪽 위 모서리 [HANDLE_LENGTH] 손잡이만
  * 드래그를 보고, 열린 뒤에는 원래 제스처로 닫을 수 있게 다시 켠다.
  */
 @Composable
@@ -110,15 +114,15 @@ fun DebugDrawerHost(content: @Composable () -> Unit) {
                     content()
                     Box(
                         modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .width(EDGE_WIDTH)
-                            .height(HANDLE_HEIGHT)
+                            .align(Alignment.TopStart)
+                            .width(HANDLE_LENGTH)
+                            .height(EDGE_DEPTH)
                             .zIndex(1f)
                             .systemGestureExclusion()
                             .pointerInput(Unit) {
                                 detectHorizontalDragGestures { _, dragAmount ->
-                                    // 오른쪽 -> 왼쪽. 반대로 끌면 무시한다.
-                                    if (dragAmount < 0) setDrawerOpen(true)
+                                    // 왼쪽 -> 오른쪽. 반대로 끌면 무시한다.
+                                    if (dragAmount > 0) setDrawerOpen(true)
                                 }
                             },
                     )

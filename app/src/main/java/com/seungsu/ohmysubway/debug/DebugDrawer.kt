@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -47,40 +46,32 @@ import com.seungsu.ohmysubway.core.BuildConfig as CoreBuildConfig
 import com.suseung.core.debug.DebugPreferences
 import kotlinx.coroutines.launch
 
-/** 화면 위쪽 끝에서 이만큼 안쪽까지가 드로어를 여는 손잡이다. */
-private val EDGE_DEPTH = 32.dp
-
 /**
- * 손잡이의 가로 길이. 화면 너비만큼 늘리지 않고 200dp 로 못 박는다.
- *
- * [Modifier.systemGestureExclusion] 으로 시스템 제스처를 비켜달라고 요청할 수 있는데
- * **한 모서리당 200dp 까지만 들어준다.** 더 길게 잡으면 시스템이 임의로 잘라서, 손잡이
- * 어디를 잡느냐에 따라 어떤 날은 열리고 어떤 날은 안 열리는 손잡이가 된다. 그래서
- * 처음부터 들어주는 만큼만 잡는다.
- *
- * **왼쪽 위 모서리에 두는 이유.** 왼쪽·오른쪽 가장자리 전체는 시스템 뒤로가기 제스처
- * 구역이라, 화면 세로 중간에 손잡이를 두면 그냥 쓸어도 드로어 대신 앱이 뒤로가기/종료된다.
- * 위쪽 모서리는 뒤로가기 제스처와 안 겹친다(대신 알림 셰이드를 당길 수 있는 자리지만, 그건
- * 아래로 쓸어야 열려서 가로 드래그와는 안 부딪힌다).
+ * 타이틀 바 왼쪽(네비게이션 아이콘)과 오른쪽(있다면 액션 아이콘) 버튼을 건드리지
+ * 않도록, 그 사이 빈 공간만 손잡이로 쓴다. 양쪽 아이콘 터치 영역(48dp)보다
+ * 넉넉하게 잡는다.
  */
-private val HANDLE_LENGTH = 200.dp
+private val TITLE_ZONE_INSET = 72.dp
+
+/** 타이틀 바 높이보다 조금 더 넉넉하게 — 상태바 포함해서 길게 눌러도 걸리게. */
+private val TITLE_ZONE_HEIGHT = 96.dp
 
 private val DRAWER_WIDTH = 300.dp
 
 /**
- * 왼쪽 위 모서리에서 오른쪽으로 쓸면 열리는 디버그 서랍.
+ * 타이틀을 길게 누르면 열리는 디버그 서랍.
  *
  * 릴리즈 빌드에서는 [content] 를 그대로 내보내고 아무것도 감싸지 않는다.
+ *
+ * **가장자리 스와이프 대신 길게 누르기를 쓰는 이유.** 왼쪽·오른쪽 가장자리는 시스템
+ * 뒤로가기 제스처 구역이라 스와이프로 여는 손잡이는 계속 걸리적거렸다(2026-10-10).
+ * 타이틀 바 빈 공간을 길게 누르는 건 어떤 시스템 제스처와도 안 겹치고, 짧게 누르는
+ * 보통 탭과도 구분된다.
  *
  * **왜 레이아웃 방향을 뒤집나.** ModalNavigationDrawer 는 언제나 시작 모서리에서
  * 나온다. 오른쪽에서 나오게 하는 옵션이 없어서, 드로어만 RTL 로 계산시키고 그 안의
  * 실제 내용은 다시 LTR 로 되돌려 놓는다. 내용까지 RTL 로 두면 앱 화면 전체가
  * 거울처럼 뒤집힌다.
- *
- * **왜 드로어 자체의 스와이프를 끄나.** gesturesEnabled 를 켜두면 드로어가 화면
- * 전체의 가로 드래그를 가져간다. 그러면 달력 좌우 넘기기나 리스트 가로 스크롤이
- * 디버그 빌드에서만 안 먹는다. 닫혀 있을 때는 왼쪽 위 모서리 [HANDLE_LENGTH] 손잡이만
- * 드래그를 보고, 열린 뒤에는 원래 제스처로 닫을 수 있게 다시 켠다.
  */
 @Composable
 fun DebugDrawerHost(content: @Composable () -> Unit) {
@@ -114,16 +105,13 @@ fun DebugDrawerHost(content: @Composable () -> Unit) {
                     content()
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .width(HANDLE_LENGTH)
-                            .height(EDGE_DEPTH)
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .padding(horizontal = TITLE_ZONE_INSET)
+                            .height(TITLE_ZONE_HEIGHT)
                             .zIndex(1f)
-                            .systemGestureExclusion()
                             .pointerInput(Unit) {
-                                detectHorizontalDragGestures { _, dragAmount ->
-                                    // 왼쪽 -> 오른쪽. 반대로 끌면 무시한다.
-                                    if (dragAmount > 0) setDrawerOpen(true)
-                                }
+                                detectTapGestures(onLongPress = { setDrawerOpen(true) })
                             },
                     )
                 }

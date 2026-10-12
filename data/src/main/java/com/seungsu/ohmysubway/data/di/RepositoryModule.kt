@@ -1,7 +1,9 @@
 package com.seungsu.ohmysubway.data.di
 
+import com.seungsu.ohmysubway.data.repository.AppUpdateRepositoryImpl
 import com.seungsu.ohmysubway.data.repository.ArrivalRepositoryImpl
 import com.seungsu.ohmysubway.data.repository.SubwayLineRepositoryImpl
+import com.seungsu.ohmysubway.domain.repository.AppUpdateRepository
 import com.seungsu.ohmysubway.domain.repository.ArrivalRepository
 import com.seungsu.ohmysubway.domain.repository.SubwayLineRepository
 import dagger.Binds
@@ -18,4 +20,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindArrivalRepository(impl: ArrivalRepositoryImpl): ArrivalRepository
+
+    @Binds
+    abstract fun bindAppUpdateRepository(impl: AppUpdateRepositoryImpl): AppUpdateRepository
 }

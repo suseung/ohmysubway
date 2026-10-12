@@ -16,6 +16,8 @@ import com.seungsu.ohmysubway.core.navigation.Screen
 import com.suseung.designsystem.theme.SsTheme
 import com.seungsu.ohmysubway.guide.GuideScreen
 import com.seungsu.ohmysubway.home.HomeScreen
+import com.seungsu.ohmysubway.home.settings.SettingsScreen
+import com.seungsu.ohmysubway.home.settings.VersionCheckScreen
 
 private const val TRANSITION_MS = 280
 
@@ -38,10 +40,22 @@ fun OhMySubwayNavHost(
         popExitTransition = { slideOutHorizontally(spec) { it } }
     ) {
         composable<Screen.Home> {
-            HomeScreen(onGuideClick = { navController.navigate(Screen.Guide) })
+            HomeScreen(
+                onGuideClick = { navController.navigate(Screen.Guide) },
+                onSettingsClick = { navController.navigate(Screen.Settings) },
+            )
         }
         composable<Screen.Guide> {
             GuideScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable<Screen.Settings> {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToVersionCheck = { navController.navigate(Screen.VersionCheck) },
+            )
+        }
+        composable<Screen.VersionCheck> {
+            VersionCheckScreen(onBack = { navController.popBackStack() })
         }
     }
 }

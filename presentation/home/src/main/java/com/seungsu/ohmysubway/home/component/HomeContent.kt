@@ -12,8 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +35,7 @@ fun HomeContent(
     state: HomeState,
     uiAction: (HomeIntent) -> Unit,
     onGuideClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = SsTheme.colors
@@ -55,6 +60,13 @@ fun HomeContent(
             )
             TextButton(onClick = onGuideClick) {
                 Text(text = "정확도 안내", style = SsTheme.typos.regular.font12)
+            }
+            IconButton(onClick = onSettingsClick) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "설정",
+                    tint = colors.label.onBgSecondary,
+                )
             }
         }
         Spacer(modifier = Modifier.height(4.dp))

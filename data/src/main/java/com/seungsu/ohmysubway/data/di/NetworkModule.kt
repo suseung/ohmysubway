@@ -5,8 +5,7 @@ import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.seungsu.ohmysubway.data.BuildConfig
 import com.seungsu.ohmysubway.data.service.SubwayApiService
-import com.seungsu.ohmysubway.data.usage.UsageInterceptor
-import com.seungsu.ohmysubway.data.usage.UsageReporter
+import com.suseung.core.usage.ApiUsageInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,15 +48,15 @@ object NetworkModule {
     @Provides @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        chuckerInterceptor: ChuckerInterceptor?,
-        usageReporter: UsageReporter
+        chuckerInterceptor: ChuckerInterceptor?
     ): OkHttpClient = OkHttpClient.Builder()
         // 위젯 탭은 브로드캐스트로 처리돼 시간이 얼마 없다. 30초를 기다리면
         // 절전모드에서 응답 전에 프로세스가 잘려 "불러오는 중"만 남는다.
         .connectTimeout(5, TimeUnit.SECONDS)
         .readTimeout(5, TimeUnit.SECONDS)
         .callTimeout(7, TimeUnit.SECONDS)
-        .addInterceptor(UsageInterceptor(usageReporter))
+        // 외부 API 호출 횟수를 배포 서버에 보고한다(ohmycore 0.3.0). 값이 비면 아무것도 안 한다.
+        .addInterceptor(ApiUsageInterceptor(context, BuildConfig.APK_DIST_URL, BuildConfig.APK_DIST_READ_TOKEN))
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })

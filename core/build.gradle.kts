@@ -16,6 +16,6 @@ android {
 }
 
 dependencies {
-    api("com.suseung:core:0.2.0")
+    api("com.suseung:core:0.3.0")
     implementation(libs.kotlinx.serialization.json)
 }

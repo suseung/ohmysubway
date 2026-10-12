@@ -18,6 +18,9 @@ android {
         buildConfig = true
     }
     defaultConfig {
+        // 외부 API 호출 횟수를 보고할 배포 서버(apk-dist). 값이 없으면 보고를 건너뛴다.
+        buildConfigField("String", "APK_DIST_URL", "\"${localProperties.getProperty("apkdist.baseUrl") ?: ""}\"")
+        buildConfigField("String", "APK_DIST_READ_TOKEN", "\"${localProperties.getProperty("apkdist.readToken") ?: ""}\"")
         // 서울 열린데이터광장 실시간 지하철 인증키 — local.properties의 SEOUL_SUBWAY_API_KEY
         buildConfigField(
             "String",

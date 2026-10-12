@@ -51,7 +51,7 @@ fun OhMySubwayNavHost(
         composable<Screen.Settings> {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToVersionCheck = { navController.navigate(Screen.VersionCheck) },
+                onNavigateToVersionCheck = { navController.navigate(it) },
             )
         }
         composable<Screen.VersionCheck> {
